@@ -37,15 +37,15 @@ class User(models.Model):
     password = models.CharField(max_length=50,verbose_name='密码')
 
     nick = models.CharField(max_length=30,verbose_name="昵称", default="")
-    gender = models.CharField(max_length=6, choices=(("male", "男"), ("female", "女")), default="female")
-    head_image = models.ImageField(verbose_name="用户头像", upload_to="users/%Y/%m", default="")
+    gender = models.CharField(max_length=6, choices=(("male", "男"), ("female", "女")), default="female",verbose_name="性别")
+    head_image = models.ImageField(verbose_name="用户头像", upload_to="user/%Y/%m", default="")
     head_qn_url = models.CharField(max_length=100,verbose_name='七牛头像地址')
     account_num = models.CharField(max_length=20,verbose_name='等号')
     my_sign = models.CharField(max_length=128,verbose_name='个性签名',default="")
 
     birthday = models.DateField(verbose_name="出生日期", blank=True, null=True)
     real_name = models.CharField(max_length=30,verbose_name='真实姓名',default="")
-    school_id = models.ForeignKey('School',verbose_name='学校id',on_delete=models.CASCADE,null=True)
+    school = models.ForeignKey('School',verbose_name='学校id',on_delete=models.CASCADE,null=True)
     school_name = models.CharField(max_length=50,verbose_name='学校',default="")
     college_name = models.CharField(max_length=50,verbose_name='学院',default="")
     major = models.CharField(max_length=50,verbose_name='专业',default="")
