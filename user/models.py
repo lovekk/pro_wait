@@ -79,7 +79,15 @@ class School(models.Model):
     is_show = models.BooleanField(default=False, verbose_name='是否显示')
     is_enter = models.SmallIntegerField(default=0, choices=enter_choices, verbose_name='入驻')
 
+
+
+    def __str__(self):
+        return self.name
+
     class Meta:
         db_table = 'dn_school'
         verbose_name = '学校信息'
         verbose_name_plural = verbose_name
+
+
+
