@@ -36,6 +36,10 @@ class SchoolAdmin(admin.ModelAdmin):
     # 列表上方搜索框
     search_fields = ['name']
 
+    # 设置哪些字段可以点击进入编辑界面
+    list_display_links = ['id', 'name']
+
+
 
 
 # admin.site.register(User, UserAdmin)
