@@ -2,11 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="dc816967-0ff5-4a62-a099-990acf5f69df" name="默认" comment="">
-      <change afterPath="$PROJECT_DIR$/lose/views.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils/qiniu_upload.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils/test.jpeg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.qiniu_pythonsdk_hostscache.json" beforeDir="false" afterPath="$PROJECT_DIR$/.qiniu_pythonsdk_hostscache.json" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -22,7 +18,7 @@
     <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -48,12 +44,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/pro_wait/__init__.py" />
-        <option value="$PROJECT_DIR$/user/apps.py" />
-        <option value="$PROJECT_DIR$/.gitignore" />
-        <option value="$PROJECT_DIR$/user/urls.py" />
-        <option value="$PROJECT_DIR$/user/views.py" />
-        <option value="$PROJECT_DIR$/notice/urls.py" />
         <option value="$PROJECT_DIR$/user/__init__.py" />
         <option value="$PROJECT_DIR$/notice/__init__.py" />
         <option value="$PROJECT_DIR$/notice/apps.py" />
@@ -91,13 +81,20 @@
         <option value="$PROJECT_DIR$/utils/qiniu_upload.py" />
         <option value="$PROJECT_DIR$/lose/apps.py" />
         <option value="$PROJECT_DIR$/lose/__init__.py" />
-        <option value="$PROJECT_DIR$/pro_wait/urls.py" />
-        <option value="$PROJECT_DIR$/pro_wait/settings.py" />
         <option value="$PROJECT_DIR$/utils/qiniu/qiniu_upload.py" />
         <option value="$PROJECT_DIR$/lose/models.py" />
         <option value="$PROJECT_DIR$/lose/admin.py" />
-        <option value="$PROJECT_DIR$/lose/urls.py" />
         <option value="$PROJECT_DIR$/lose/views.py" />
+        <option value="$PROJECT_DIR$/activity/test.py" />
+        <option value="$PROJECT_DIR$/second/apps.py" />
+        <option value="$PROJECT_DIR$/pro_wait/settings.py" />
+        <option value="$PROJECT_DIR$/pro_wait/urls.py" />
+        <option value="$PROJECT_DIR$/second/__init__.py" />
+        <option value="$PROJECT_DIR$/lose/urls.py" />
+        <option value="$PROJECT_DIR$/second/urls.py" />
+        <option value="$PROJECT_DIR$/second/views.py" />
+        <option value="$PROJECT_DIR$/second/models.py" />
+        <option value="$PROJECT_DIR$/second/admin.py" />
       </list>
     </option>
   </component>
@@ -133,31 +130,12 @@
             <path>
               <item name="pro_wait" type="b2602c69:ProjectViewProjectNode" />
               <item name="pro_wait" type="462c0819:PsiDirectoryNode" />
-              <item name="activity" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pro_wait" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pro_wait" type="462c0819:PsiDirectoryNode" />
               <item name="lose" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="pro_wait" type="b2602c69:ProjectViewProjectNode" />
               <item name="pro_wait" type="462c0819:PsiDirectoryNode" />
-              <item name="pro_wait" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pro_wait" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pro_wait" type="462c0819:PsiDirectoryNode" />
-              <item name="user" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pro_wait" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pro_wait" type="462c0819:PsiDirectoryNode" />
-              <item name="utils" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pro_wait" type="b2602c69:ProjectViewProjectNode" />
-              <item name="外部库" type="cb654da1:ExternalLibrariesNode" />
+              <item name="second" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -168,21 +146,21 @@
   <component name="PropertiesComponent">
     <property name="SearchEverywhereHistoryKey" value="Culture_comment&#9;null&#9;null&#10;activities&#9;null&#9;null&#10;activites_list&#9;null&#9;null&#10;Activites&#9;null&#9;null&#10;wait&#9;null&#9;null" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="D:/apicloud/等你下课Demo" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="fileTemplates" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\python\Envs\pro_wait_dj20\pro_wait\utils\qiniu" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\python\Envs\pro_wait_dj20\pro_wait\second" />
       <recent name="D:\python\Envs\pro_wait_dj20\pro_wait\utils" />
       <recent name="D:\python\Envs\pro_wait_dj20\pro_wait\lose" />
       <recent name="D:\python\Envs\pro_wait_dj20\pro_wait\homepage" />
       <recent name="D:\python\Envs\pro_wait_dj20\pro_wait\activity" />
-      <recent name="D:\python\Envs\pro_wait_dj20\pro_wait\activities" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="D:\python\Envs\pro_wait_dj20\pro_wait\utils\qiniu" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -282,8 +260,8 @@
       <window_info anchor="bottom" id="Run" order="2" weight="0.32917964" />
       <window_info anchor="bottom" id="Version Control" order="11" />
       <window_info anchor="bottom" id="Python Console" order="12" weight="0.32917964" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="10" sideWeight="0.49779493" visible="true" weight="0.49948078" />
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.14829107" />
+      <window_info anchor="bottom" id="Terminal" order="10" sideWeight="0.49779493" visible="true" weight="0.20145379" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.09536935" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="right" id="Database" order="4" />
       <window_info anchor="right" id="SciView" order="3" />
@@ -311,105 +289,10 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/homepage/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="88">
-          <caret line="5" column="49" selection-start-line="5" selection-start-column="49" selection-end-line="5" selection-end-column="49" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/article/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="110">
-          <caret line="6" column="26" lean-forward="true" selection-start-line="6" selection-start-column="26" selection-end-line="6" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/article/migrations/0007_auto_20181206_2017.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
-          <caret line="12" column="18" selection-start-line="12" selection-start-column="18" selection-end-line="12" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/article/migrations/0008_auto_20181206_2309.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="15" column="27" selection-start-line="15" selection-start-column="27" selection-end-line="15" selection-end-column="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/culture/migrations/0006_auto_20181206_2017.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/article/admin.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="374">
-          <caret line="18" column="110" selection-start-line="18" selection-start-column="110" selection-end-line="18" selection-end-column="110" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/article/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="660">
-          <caret line="30" column="16" selection-start-line="30" selection-start-column="4" selection-end-line="30" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#28#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/article/views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="440">
-          <caret line="44" column="51" lean-forward="true" selection-start-line="44" selection-start-column="51" selection-end-line="44" selection-end-column="51" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/culture/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="286">
-          <caret line="13" column="38" selection-start-line="13" selection-start-column="38" selection-end-line="13" selection-end-column="38" />
-          <folding>
-            <element signature="e#0#28#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/culture/views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="286">
-          <caret line="25" column="42" lean-forward="true" selection-start-line="25" selection-start-column="42" selection-end-line="25" selection-end-column="42" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/article/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="44">
-          <caret line="2" column="48" selection-start-line="2" selection-start-column="48" selection-end-line="2" selection-end-column="48" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/article/apps.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="110">
-          <caret line="5" column="25" lean-forward="true" selection-start-line="5" selection-start-column="25" selection-end-line="5" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/notice/admin.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="308">
-          <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/utils/__init__.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/qiniu/.qiniu_pythonsdk_hostscache.json">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/qiniu/.qiniu_pythonsdk_hostscache.json" />
     <entry file="file://$PROJECT_DIR$/activity/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="22">
@@ -431,32 +314,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pro_wait/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="154">
-          <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
-          <folding>
-            <element signature="e#628#660#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lose/migrations/0001_initial.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/lose/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="44">
-          <caret line="2" column="43" lean-forward="true" selection-start-line="2" selection-start-column="43" selection-end-line="2" selection-end-column="43" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/Screenshot_2018-12-07-13-45-38-813_com.g347699885.uwn.png">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/Screenshot_2018-12-07-13-45-34-570_com.g347699885.uwn.png">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/Screenshot_2018-12-07-13-45-38-813_com.g347699885.uwn.png" />
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/Screenshot_2018-12-07-13-45-34-570_com.g347699885.uwn.png" />
     <entry file="file://$PROJECT_DIR$/activity/apps.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="44">
@@ -464,34 +326,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/qiniu/qiniu_upload.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="52" selection-start-line="52" selection-end-line="52" />
-          <folding>
-            <element signature="e#25#73#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pro_wait/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="316">
-          <caret line="132" column="10" selection-start-line="132" selection-end-line="132" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/qiniu/qiniu_upload.py" />
     <entry file="file://$PROJECT_DIR$/utils/qiniu_upload.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="220">
           <caret line="29" column="24" selection-start-line="29" selection-start-column="16" selection-end-line="29" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lose/apps.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="110">
-          <caret line="5" column="25" lean-forward="true" selection-start-line="5" selection-start-column="25" selection-end-line="5" selection-end-column="25" />
         </state>
       </provider>
     </entry>
@@ -502,55 +341,23 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/lose/admin.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="206">
-          <caret line="27" column="22" selection-start-line="27" selection-start-column="22" selection-end-line="27" selection-end-column="22" />
-          <folding>
-            <element signature="e#0#32#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/IMG_20181207_144723_XZ7Hqwx.jpg">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/IMG_20181207_144726.jpg">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/mmexport1543984424287.jpg">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/IMG_20181207_144723_XZ7Hqwx.jpg" />
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/IMG_20181207_144726.jpg" />
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/mmexport1543984424287.jpg" />
     <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/9e90ed9287a5b210c975c51da5ca0263.jpg">
       <provider selected="true" editor-type-id="images" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/b3dc997154bcce7da2c571eba9124c75.jpg">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/6170ea3d830566b6851b626fb1a81009.jpg">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/b3dc997154bcce7da2c571eba9124c75.jpg" />
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/6170ea3d830566b6851b626fb1a81009.jpg" />
     <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/69c59e9fabc93a5acfc647fa3bd4c137.jpg">
       <provider selected="true" editor-type-id="images" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/97f874e3516251b3aa32768cb00d5336.jpg">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/8f12f49439d90c95e66564a4aac1e009.jpg">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/IMG_20181207_144721.jpg">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/mmexport1543984424287_HHmgyY8.jpg">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/IMG_20181207_144723.jpg">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/IMG_20181207_144721_VYlohnU.jpg">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/97f874e3516251b3aa32768cb00d5336.jpg" />
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/8f12f49439d90c95e66564a4aac1e009.jpg" />
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/IMG_20181207_144721.jpg" />
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/mmexport1543984424287_HHmgyY8.jpg" />
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/IMG_20181207_144723.jpg" />
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/08/IMG_20181207_144721_VYlohnU.jpg" />
     <entry file="file://$PROJECT_DIR$/activity/models.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="924">
@@ -585,40 +392,150 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/activity/test.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/activity/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="154">
-          <caret line="7" selection-start-line="7" selection-end-line="29" selection-end-column="48" />
+        <state relative-caret-position="176">
+          <caret line="8" column="27" selection-start-line="8" selection-start-column="27" selection-end-line="8" selection-end-column="27" />
           <folding>
             <element signature="e#0#35#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/second/tests.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lose/apps.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="110">
+          <caret line="5" selection-start-line="5" selection-end-line="5" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lose/admin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="404">
+          <caret line="28" lean-forward="true" selection-end-line="38" selection-end-column="59" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pro_wait/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="624">
+          <caret line="47" column="11" selection-start-line="47" selection-start-column="11" selection-end-line="47" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pro_wait/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="558">
+          <caret line="33" column="51" lean-forward="true" selection-start-line="33" selection-start-column="51" selection-end-line="33" selection-end-column="51" />
+          <folding>
+            <element signature="e#628#660#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/second/apps.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="66">
+          <caret line="3" column="6" selection-start-line="3" selection-start-column="6" selection-end-line="3" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lose/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="44">
+          <caret line="2" selection-start-line="2" selection-end-line="2" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/second/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="40" selection-start-column="40" selection-end-column="40" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/lose/urls.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="8" column="53" selection-start-line="8" selection-start-column="53" selection-end-line="8" selection-end-column="53" />
+        <state relative-caret-position="88">
+          <caret line="4" selection-start-line="4" selection-end-line="4" />
           <folding>
             <element signature="e#2#30#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/second/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="110">
+          <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
+          <folding>
+            <element signature="e#2#30#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/09/3ac08efe71b6203b486b23037e97001e.jpg">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/09/3ac08efe71b6203b486b23037e97001e_APYfgFe.jpg">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/09/69c59e9fabc93a5acfc647fa3bd4c137.jpg">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/09/8602b662c6586c885be9f97ad3031f96.jpg">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/media/lose/2018/12/09/fd49b137381ba88dc9b154cd95088fe6.jpg">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/second/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="308">
+          <caret line="86" column="36" lean-forward="true" selection-start-line="86" selection-start-column="36" selection-end-line="86" selection-end-column="36" />
+          <folding>
+            <element signature="e#1#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/lose/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="572">
-          <caret line="26" column="11" selection-start-line="26" selection-start-column="4" selection-end-line="26" selection-end-column="11" />
+        <state relative-caret-position="286">
+          <caret line="13" column="19" lean-forward="true" selection-start-line="13" selection-start-column="19" selection-end-line="13" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/second/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="198">
+          <caret line="9" column="18" lean-forward="true" selection-start-line="9" selection-start-column="18" selection-end-line="9" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/second/admin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="132">
+          <caret line="6" lean-forward="true" selection-start-line="6" selection-end-line="6" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/lose/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="321">
-          <caret line="24" column="17" lean-forward="true" selection-start-line="24" selection-start-column="17" selection-end-line="24" selection-end-column="17" />
-          <folding>
-            <element signature="e#0#35#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="110">
+          <caret line="5" column="11" selection-start-line="5" selection-start-column="11" selection-end-line="5" selection-end-column="11" />
         </state>
       </provider>
     </entry>
