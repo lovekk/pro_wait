@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from user.models import User, School
+from user.models import User, School, Follow
 
 # Register your models here.
 
@@ -38,6 +38,24 @@ class SchoolAdmin(admin.ModelAdmin):
 
     # 设置哪些字段可以点击进入编辑界面
     list_display_links = ['id', 'name']
+
+
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'user', 'follow_id', 'create_date']
+
+    # 每页显示条数
+    list_per_page = 10
+
+    # id 排序
+    ordering = ['-id']
+
+    # 列表上方搜索框
+    search_fields = ['user']
+
+    # 设置哪些字段可以点击进入编辑界面
+    list_display_links = ['id', 'user']
 
 
 

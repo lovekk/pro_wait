@@ -67,6 +67,7 @@ class AddView(View):
         # 获取ajax数据
         school_id = request.POST.get('school_id')
         creator_id = request.POST.get('creator_id')
+        # content = request.POST.get('content').replace("\n","</br>")  # 没法换行
         content = request.POST.get('content')
         price = int(request.POST.get('price'))
         is_type = int(request.POST.get('is_type'))

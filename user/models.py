@@ -45,10 +45,14 @@ class User(models.Model):
 
     birthday = models.DateField(verbose_name="出生日期", blank=True, null=True)
     real_name = models.CharField(max_length=30,verbose_name='真实姓名',default="")
+    id_card_num = models.CharField(max_length=20,verbose_name='身份证号',default="")
+
     school = models.ForeignKey('School',verbose_name='学校id',on_delete=models.CASCADE,null=True)
     school_name = models.CharField(max_length=30,verbose_name='学校',default="")
     college_name = models.CharField(max_length=30,verbose_name='学院',default="")
     major = models.CharField(max_length=30,verbose_name='专业',default="")
+    stu_num = models.CharField(max_length=30,verbose_name='学号',default="")
+    stu_password = models.CharField(max_length=30,verbose_name='学号密码',default="")
 
     token = models.CharField(max_length=100,verbose_name='身份令牌',default="")
     device_num = models.CharField(max_length=100,verbose_name='设备号',default="")
@@ -88,6 +92,19 @@ class School(models.Model):
     class Meta:
         db_table = 'dn_school'
         verbose_name = '学校信息'
+        verbose_name_plural = verbose_name
+
+
+
+class Follow(models.Model):
+    follow_id = models.IntegerField(verbose_name='我的关注用户id',default=0)
+    create_date = models.DateField(auto_now_add=True,verbose_name="创建日期")
+    create_time = models.TimeField(auto_now_add=True,verbose_name="创建时间")
+    user = models.ForeignKey('user.User',verbose_name='用户',on_delete=models.CASCADE,null=True)
+
+    class Meta:
+        db_table = 'dn_user_follow'
+        verbose_name = "关注"
         verbose_name_plural = verbose_name
 
 
