@@ -1,4 +1,6 @@
 settings.py
 urls.py
 *.pyc
-
+*.mp3
+*.mp4
+media
