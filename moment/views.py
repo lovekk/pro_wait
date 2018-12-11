@@ -28,37 +28,53 @@ def moment_add(request):
 
 
 # 类视图方式写
-# 校园二手 列表
-# class IndexView(View):
-#     def get(self, request):
-#         school_id = request.GET.get('school_id')
-#         if school_id:
-#             # 一对多 反查外键
-#             # 先查询 所有id
-#             seconds_list = Second.objects.filter(school=school_id, is_first=0).values('id', 'content','price',
-#                 'good_num', 'create_date', 'create_time', 'is_type', u_nick=F('creator__nick'),
-#                 u_img=F('creator__head_image'), u_id=F('creator__id'), u_token=F('creator__token')).order_by('-id')
-#
-#             data = {}
-#             for_all = {}  # 单次数据
-#             all_list = []  # 总数据
-#
-#             # 遍历id
-#             for item in list(seconds_list):
-#                 # print(item.get('id'))  # {'id': 43}
-#                 item_id = item.get('id')
-#                 # 查发布图片
-#                 for_all['for_img'] = list(SecondImg.objects.filter(second=item_id).values('id', 'qiniu_img', 'second'))
-#                 all_list.append(copy.deepcopy(for_all))
-#                 # print(for_all)
-#
-#             data['code'] = 200
-#             data['text_list'] = list(seconds_list)
-#             data['img_list'] = all_list
-#
-#             return JsonResponse(data)
-#         else:
-#             return JsonResponse({'errmsg': '尚未选择学校'})
+# 发现 列表
+class IndexView(View):
+    def get(self, request):
+        school_id = request.GET.get('school_id')
+        if school_id:
+            # 一对多 反查外键
+            # 先查询 所有id
+            moments_first = Moment.objects.filter(school=school_id, is_first=0, is_show=0).values('id').order_by('-id')
+
+            data = {}
+            for_one = {}  # 单次数据
+            all_list = []  # 总数据
+
+            # 遍历id
+            for item in list(moments_first):
+                # print(item.get('id'))  # {'id': 43}
+                item_id = item.get('id')
+                # 查发布内容
+                for_t = Moment.objects.filter(id=item_id).values(
+                    'id', 'content', 'good_num', 'publish_date', 'publish_time','tag','comment_num','view_num',
+                    u_nick=F('user__nick'), u_img=F('user__head_image'), u_id=F('user__id'))
+                for_text = list(for_t)
+
+                # 查发布图片
+                for_img = list(Image.objects.filter(moment=item_id).values('id', 'qiniu_img', 'moment'))
+
+                # 查看 录音
+                for_voice = list(Voice.objects.filter(moment=item_id).values('id', 'qiniu_voice', 'local_voice','voice_time','moment'))
+
+                # 查看 视频
+                for_video = list(Video.objects.filter(moment=item_id).values('id', 'qiniu_video', 'moment'))
+
+                for_one['id'] = item_id
+                for_one['for_text'] = for_text
+                for_one['for_img'] = for_img
+                for_one['for_voice'] = for_voice
+                for_one['for_video'] = for_video
+
+                all_list.append(copy.deepcopy(for_one))
+                # print(for_one)
+
+            data['code'] = 200
+            data['all_list'] = all_list
+
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'errmsg': '尚未选择学校'})
 
 
 # 添加 发布
