@@ -1,5 +1,5 @@
 from django.contrib import admin
-from moment.models import Moment, Voice, Video, Image, Good, Comment, ReplyComment, Tag
+from moment.models import Moment, Voice, Video, Image, Good, Comment, ReplyComment, Tag, Report, CommentGood
 
 # 发现
 @admin.register(Moment)
@@ -112,6 +112,30 @@ class CommentAdmin(admin.ModelAdmin):
 class ReplyCommentAdmin(admin.ModelAdmin):
     # 显示的字段
     list_display = ['id', 'content', 'comment_date', 'comment_time', 'user', 'comment', 'moment']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+# 评论点赞
+@admin.register(CommentGood)
+class GoodAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'user', 'comment', 'crate_datetime']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+# 举报
+@admin.register(Report)
+class ReportAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'moment', 'user']
 
     # 每页显示条数
     list_per_page = 50

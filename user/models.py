@@ -83,7 +83,7 @@ class School(models.Model):
     name = models.CharField(max_length=30,default='',verbose_name='学校名称')
     province = models.CharField(max_length=20,default='',verbose_name='学校省')
     city = models.CharField(max_length=20,default='',verbose_name='学校市')
-    is_show = models.BooleanField(default=False, verbose_name='是否显示')
+    is_show = models.BooleanField(default=False, verbose_name='是否显示在APP')
     is_enter = models.SmallIntegerField(default=0, choices=enter_choices, verbose_name='入驻')
 
     def __str__(self):

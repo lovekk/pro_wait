@@ -25,7 +25,7 @@ class SchoolAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'province', 'city', 'is_show', 'is_enter']
 
     # 每页显示条数
-    list_per_page = 10
+    list_per_page = 20
 
     # id 正序
     ordering = ['id']
