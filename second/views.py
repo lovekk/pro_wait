@@ -37,7 +37,7 @@ class IndexView(View):
             # 先查询 所有id
             seconds_list = Second.objects.filter(school=school_id, is_first=0).values('id', 'content','price',
                 'good_num', 'create_date', 'create_time', 'is_type', u_nick=F('creator__nick'),
-                u_img=F('creator__head_image'), u_id=F('creator__id'), u_token=F('creator__token')).order_by('-id')
+                u_img=F('creator__head_qn_url'), u_id=F('creator__id'), u_token=F('creator__token')).order_by('-id')
 
             data = {}
             for_all = {}  # 单次数据

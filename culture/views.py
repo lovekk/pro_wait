@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse,JsonResponse
+from django.db.models import Count, F
+
 from .models import Culture, CultureComment
 from user.models import User
 
@@ -19,11 +21,10 @@ def culture_content(request):
             # 学校id 用户id  ---->  用户昵称，用户头像, 评论id，评论内容
             culture_title = look_this.title
             comment = CultureComment.objects.filter(culture__title=culture_title).values(
-                'commentator',
                 'content',
                 'create_date',
-                'commentator__nick',
-                 'commentator__head_image'
+                u_nick=F('commentator__nick'),
+                u_img=F('commentator__head_qn_url'),
             ).order_by('-id')
 
             data = {}

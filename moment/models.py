@@ -223,6 +223,7 @@ class Tag(models.Model):
 class Report(models.Model):
     moment = models.ForeignKey('moment',verbose_name='发现id',on_delete=models.CASCADE, null=True)
     user = models.ForeignKey('user.User', verbose_name='用户id', on_delete=models.CASCADE, null=True)
+    publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
 
     class Meta:
         db_table = 'dn_moment_report'

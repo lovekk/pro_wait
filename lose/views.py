@@ -32,7 +32,7 @@ def lose_list(request):
             item_id=item.get('id')
             # 查发布内容
             for_t = Lose.objects.filter(id=item_id).values('id', 'content', 'good_num', 'create_date', 'create_time', 'is_type',
-                u_nick = F('creator__nick'), u_img = F('creator__head_image'), u_id = F('creator__id'), u_token = F('creator__token'))
+                u_nick = F('creator__nick'), u_img = F('creator__head_qn_url'), u_id = F('creator__id'), u_token = F('creator__token'))
             for_text = list(for_t)
             # 查发布图片
             for_img = list(LoseImg.objects.filter(lose=item_id).values('id', 'qiniu_img','lose'))

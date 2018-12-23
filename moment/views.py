@@ -53,7 +53,17 @@ class IndexView(View):
             if choose_one == 1:
                 moments_first = Moment.objects.filter(school=school_id, is_first=0, is_show=0).values('id').order_by('-id')
                 print(456)
+
             # 关注
+            if choose_one == 2:
+                user = User.objects.get(id=user_id)
+                follows = user.follow_set.all()
+                for follow in follows:
+                    follow_id = follow.follow_id
+                    # 通过id查询出关注的人
+                    # follower = User.objects.get(id=follow_id)
+                    moments_first = Moment.objects.filter(user=follow_id, is_show=0).values('id').order_by('-id')
+
             print(list(moments_first))
             data = {}
             for_one = {}  # 单次数据
@@ -481,6 +491,8 @@ class ReplyCommentDetailView(View):
     def get(self,request):
         comment_id = request.GET.get('comment_id')
         if comment_id:
+            comment_detail = Comment.objects.filter(id = comment_id).values('id','content','replay_num','good_num',
+                'comment_date',c_head=F('user__head_image'),c_nick=F('user__nick'),)
             reply_comment_list = ReplyComment.objects.filter(comment=comment_id).values(
                 'content',
                 'comment_date',
@@ -489,6 +501,7 @@ class ReplyCommentDetailView(View):
             )
             data = {}
             data['code'] = 200
+            data['comment_detail'] = list(comment_detail)
             data['reply_moment_data'] = list(reply_comment_list)
             return JsonResponse(data)
         else:
