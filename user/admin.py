@@ -47,7 +47,7 @@ class SchoolAdmin(admin.ModelAdmin):
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
     # 显示的字段
-    list_display = ['id', 'user', 'follow_id', 'create_date']
+    list_display = ['id', 'user', 'follow_id', 'is_delete','create_date']
 
     # 每页显示条数
     list_per_page = 10

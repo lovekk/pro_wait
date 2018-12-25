@@ -1,5 +1,5 @@
 from django.contrib import admin
-from lose.models import Lose,LoseImg
+from lose.models import Lose, LoseImg, LoseComment, LoseReplyComment
 
 @admin.register(LoseImg)
 class LoseImgAdmin(admin.ModelAdmin):
@@ -12,9 +12,6 @@ class LoseImgAdmin(admin.ModelAdmin):
 
     # id 排序
     ordering = ['-id']
-
-
-
 
 
 @admin.register(Lose)
@@ -36,4 +33,44 @@ class LoseAdmin(admin.ModelAdmin):
     # 筛选器
     list_filter = ['school','is_type','is_first'] # 过滤器  一般ManyToManyField多对多字段用过滤器
     search_fields = ['content', 'school']  # 搜索字段 标题等文本字段用搜索框
+    # date_hierarchy = 'publish_date'  # 详细时间分层筛选　日期时间用分层筛选
+
+
+@admin.register(LoseComment)
+class LoseCommentAdmin(admin.ModelAdmin):
+
+    # 显示的字段
+    list_display = ['id', 'content', 'comment_date', 'comment_time', 'is_show', 'user', 'lose']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+    # 设置哪些字段可以点击进入编辑界面
+    list_display_links = ['id', 'content']
+
+    # 筛选器
+    list_filter = ['is_show'] # 过滤器  一般ManyToManyField多对多字段用过滤器
+    search_fields = ['content']  # 搜索字段 标题等文本字段用搜索框
+
+
+@admin.register(LoseReplyComment)
+class LoseReplyCommentAdmin(admin.ModelAdmin):
+
+    # 显示的字段
+    list_display = ['id', 'content', 'comment_date', 'comment_time',  'user','lose','comment','parent']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+    # 设置哪些字段可以点击进入编辑界面
+    list_display_links = ['id', 'content']
+
+    # 筛选器
+    search_fields = ['content']  # 搜索字段 标题等文本字段用搜索框
     # date_hierarchy = 'publish_date'  # 详细时间分层筛选　日期时间用分层筛选

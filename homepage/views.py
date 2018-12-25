@@ -7,6 +7,8 @@ from article.models import Article
 
 # Create your views here.
 
+
+# =========================================已经整合到 user 校园模块中了======================
 # 首页准备数据
 # 校园活动 轮播图3张 id big_img
 # 文章推荐 最新的前5篇

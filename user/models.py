@@ -60,7 +60,6 @@ class User(models.Model):
     is_official_auth = models.SmallIntegerField(default=0, choices=official_auth_choices, verbose_name='官方认证')
     is_alipay_auth = models.SmallIntegerField(default=0, choices=alipay_auth_choices, verbose_name='支付宝认证')
 
-
     class Meta:
         db_table = 'dn_user'
         verbose_name = "用户信息"
@@ -93,9 +92,14 @@ class School(models.Model):
 
 # 关注用户
 class Follow(models.Model):
+    delete_choices = (
+        (0, '关注中...'),
+        (1, '已取消关注'),
+    )
     follow_id = models.IntegerField(verbose_name='我的关注用户id',default=0)
     create_date = models.DateField(auto_now_add=True,verbose_name="创建日期")
     create_time = models.TimeField(auto_now_add=True,verbose_name="创建时间")
+    is_delete = models.SmallIntegerField(default=0, choices=delete_choices, verbose_name='是否取消关注')
     user = models.ForeignKey('user.User',verbose_name='用户',on_delete=models.CASCADE,null=True)
 
     class Meta:
@@ -106,7 +110,7 @@ class Follow(models.Model):
 
 # 学校模块
 class FunctionModule(models.Model):
-    module_name = models.CharField(max_length=30, default='', verbose_name='学校名称')
+    module_name = models.CharField(max_length=30, default='', verbose_name='模块名称')
     create_datetime = models.DateTimeField(auto_now_add=True,verbose_name="创建日期")
     school = models.ForeignKey('user.School',verbose_name='学校',on_delete=models.CASCADE,null=True)
 

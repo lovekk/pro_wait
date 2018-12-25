@@ -1,5 +1,5 @@
 from django.contrib import admin
-from second.models import Second,SecondImg
+from second.models import Second,SecondImg,SecondComment,SecondReplyComment
 
 
 @admin.register(Second)
@@ -35,3 +35,42 @@ class SecondImgAdmin(admin.ModelAdmin):
 
     # id 排序
     ordering = ['-id']
+
+
+
+@admin.register(SecondComment)
+class SecondCommentAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'content','comment_date', 'comment_time', 'is_show', 'replay_num', 'user', 'second']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+    # 设置哪些字段可以点击进入编辑界面
+    list_display_links = ['id', 'content']
+
+    # 筛选器
+    list_filter = ['is_show']  # 过滤器  一般ManyToManyField多对多字段用过滤器
+    search_fields = ['content']  # 搜索字段 标题等文本字段用搜索框
+    # date_hierarchy = 'publish_date'  # 详细时间分层筛选　日期时间用分层筛选
+
+
+@admin.register(SecondReplyComment)
+class SecondReplyCommentAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'content', 'comment_date', 'comment_time', 'user', 'second', 'comment', 'parent']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+    # 设置哪些字段可以点击进入编辑界面
+    list_display_links = ['id', 'content']
+
+    search_fields = ['content']  # 搜索字段 标题等文本字段用搜索框
+    # date_hierarchy = 'publish_date'  # 详细时间分层筛选　日期时间用分层筛选

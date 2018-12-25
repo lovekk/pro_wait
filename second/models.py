@@ -17,12 +17,18 @@ class Second(models.Model):
         (0, '未售出'),
         (1, '已出'),
     )
+    show_choices = (
+        (0, '未删除'),
+        (1, '已经删除'),
+    )
 
     content = models.CharField(max_length=300, default='', verbose_name='内容')
     price = models.IntegerField(verbose_name="价格",default=0)
     view_num = models.IntegerField(verbose_name="浏览量",default=0)
     good_num = models.IntegerField(verbose_name="点赞数",default=0)
+    want_num = models.IntegerField(verbose_name="想要人数",default=0)
     report_num = models.IntegerField(verbose_name="举报数",default=0)
+    is_show = models.SmallIntegerField(default=0, choices=show_choices, verbose_name='是否删除')
     create_date = models.DateField(auto_now_add=True, verbose_name="日期")
     create_time = models.TimeField(auto_now_add=True, verbose_name="时间")
     is_first = models.SmallIntegerField(default=0, choices=first_choices, verbose_name='置顶')
@@ -50,5 +56,48 @@ class SecondImg(models.Model):
     class Meta:
         db_table = 'dn_second_img'
         verbose_name = "校园二手图片"
+        verbose_name_plural = verbose_name
+
+
+
+# 评论表
+class SecondComment(models.Model):
+    show_choices = (
+        (0, '未删除'),
+        (1, '已经删除'),
+    )
+    content = models.CharField(max_length=100,verbose_name="评论内容",default="")
+    comment_date = models.DateField(auto_now_add=True, verbose_name="评论日期")
+    comment_time = models.TimeField(auto_now_add=True, verbose_name="评论时间")
+    is_show = models.SmallIntegerField(default=0, choices=show_choices, verbose_name='是否删除')
+    replay_num = models.IntegerField(verbose_name="评论回复数量",default=0)
+
+    user = models.ForeignKey('user.User', verbose_name='用户', on_delete=models.CASCADE, null=True)
+    second = models.ForeignKey('Second', verbose_name='二手', on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return self.content
+
+    class Meta:
+        db_table = 'dn_second_comment'
+        verbose_name = "校园二手评论"
+        verbose_name_plural = verbose_name
+
+
+# 评论回复表 二级评论
+class SecondReplyComment(models.Model):
+
+    content = models.CharField(max_length=100,verbose_name="评论内容",default="")
+    comment_date = models.DateField(auto_now_add=True, verbose_name="回复评论日期")
+    comment_time = models.TimeField(auto_now_add=True, verbose_name="回复评论时间")
+
+    user = models.ForeignKey('user.User', verbose_name='用户', on_delete=models.CASCADE, null=True)
+    second = models.ForeignKey('Second', verbose_name='二手', on_delete=models.CASCADE, null=True)
+    comment = models.ForeignKey('SecondComment', verbose_name='评论', on_delete=models.CASCADE, null=True)
+    parent = models.ForeignKey('self', verbose_name='自关联的父级', on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        db_table = 'dn_second_comment_reply'
+        verbose_name = "校园二手回复评论"
         verbose_name_plural = verbose_name
 

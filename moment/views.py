@@ -35,36 +35,37 @@ class IndexView(View):
     def get(self, request):
         school_id = request.GET.get('school_id')
         user_id = request.GET.get('user_id')
-        choose_one = int(request.GET.get('choose_one')) # 0-热门 1-最新 2-关注
+        choose_one = int(request.GET.get('choose_one')) # 0-最新 1-热门 2-关注
         print(choose_one)
         print(school_id)
         print(user_id)
         if school_id:
             # 一对多 反查外键
             # 先查询 所有id
-            moments_first = ''
-            # 热门
+            moments_first = []
+            # 最新
             if choose_one == 0:
                 # moments_first = Moment.objects.filter(school=school_id, is_first=0, is_show=0 ).values('id').order_by('-id')
-                moments_first = Moment.objects.filter(school=school_id, is_show=0, comment_num__gt=5).values('id').order_by('-id')
+                moments_first = Moment.objects.filter(school=school_id, is_first=0, is_show=0).values('id').order_by('-id')
                 print(123)
 
-            # 最新
+            # 热门
             if choose_one == 1:
-                moments_first = Moment.objects.filter(school=school_id, is_first=0, is_show=0).values('id').order_by('-id')
+                moments_first = Moment.objects.filter(school=school_id, is_show=0, comment_num__gt=5).values('id').order_by('-id')
                 print(456)
 
             # 关注
             if choose_one == 2:
+                print(999)
                 user = User.objects.get(id=user_id)
-                follows = user.follow_set.all()
-                for follow in follows:
-                    follow_id = follow.follow_id
-                    # 通过id查询出关注的人
-                    # follower = User.objects.get(id=follow_id)
-                    moments_first = Moment.objects.filter(user=follow_id, is_show=0).values('id').order_by('-id')
+                follow_u_id = []
+                follows = list(user.follow_set.filter(is_delete=0).values('follow_id'))
+                for item in follows:
+                    one_id = item['follow_id']
+                    follow_u_id.append(one_id)
+                moments_first = Moment.objects.filter(user__in=follow_u_id, is_show=0).values('id').order_by('-publish_date','-id')
 
-            print(list(moments_first))
+            print(moments_first)
             data = {}
             for_one = {}  # 单次数据
             all_list = []  # 总数据
@@ -82,7 +83,7 @@ class IndexView(View):
                 # 查发布内容
                 for_t = Moment.objects.filter(id=item_id).values(
                     'id', 'content', 'good_num', 'publish_date', 'publish_time','tag','comment_num','view_num','comment_num',
-                    u_nick=F('user__nick'), u_img=F('user__head_image'), u_id=F('user__id'))
+                    u_nick=F('user__nick'), u_img=F('user__head_qn_url'), u_id=F('user__id'))
 
 
                 for_text = list(for_t)
@@ -197,6 +198,7 @@ class MomentDetailView(View):
     def get(self,request):
         moment_id = request.GET.get('moment_id')
         u_id = request.GET.get('u_id')
+        his_id = request.GET.get('his_id')
 
         if moment_id:
             # 浏览 +1
@@ -216,8 +218,9 @@ class MomentDetailView(View):
                 'comment_num',
                 'view_num',
                 'relay_num',
+                c_id=F('user__id'),
                 c_nick=F('user__nick'),
-                c_head=F('user__head_image')
+                c_head=F('user__head_qn_url')
             )
 
             # 查发布图片
@@ -229,6 +232,7 @@ class MomentDetailView(View):
             # 查看 视频
             video = list(Video.objects.filter(moment=moment_id).values('id', 'qiniu_video', 'moment'))
 
+
             # ======================================发现·评论================================
             # 发现id 用户id  ---->  用户昵称，用户头像, 评论id，评论内容,排序
             comment = Comment.objects.filter(moment=moment_id).values(
@@ -239,10 +243,11 @@ class MomentDetailView(View):
                 'good_num',
                 'replay_num',
                 c_nick=F('user__nick'),
-                c_head=F('user__head_image')
+                c_head=F('user__head_qn_url')
             ).order_by('-id')
 
-            data = {}
+            data = {}  # 总数据
+
             # 将每个二级评论添加到对应的一级评论上
             for item in list(comment):
                 # 获取一级评论id
@@ -268,6 +273,17 @@ class MomentDetailView(View):
             data['voice']=list(voice)
             data['video']=list(video)
             data['moment_data'] = list(moment)
+            # 查看是否关注
+            if his_id == u_id:
+                data['follow'] = 2
+            else:
+                is_follow = Follow.objects.filter(follow_id=his_id, user=u_id, is_delete=0).exists()
+                if is_follow:
+                    # 已经关注了
+                    data['follow'] = 1
+                else:
+                    data['follow'] = 0  #没有关注
+
             data['comment_data'] = list(comment)
 
             return JsonResponse(data)
@@ -492,11 +508,11 @@ class ReplyCommentDetailView(View):
         comment_id = request.GET.get('comment_id')
         if comment_id:
             comment_detail = Comment.objects.filter(id = comment_id).values('id','content','replay_num','good_num',
-                'comment_date',c_head=F('user__head_image'),c_nick=F('user__nick'),)
+                'comment_date',c_head=F('user__head_qn_url'),c_nick=F('user__nick'),)
             reply_comment_list = ReplyComment.objects.filter(comment=comment_id).values(
                 'content',
                 'comment_date',
-                c_head=F('user__head_image'),
+                c_head=F('user__head_qn_url'),
                 c_nick=F('user__nick'),
             )
             data = {}
@@ -520,6 +536,73 @@ class TagView(View):
         data['code'] = 200
         data['tag'] = list(tag_list)
         return JsonResponse(data)
+
+
+# 添加关注
+class CreateFollow(View):
+    def get(self,request):
+        user_id = request.GET.get('user_id')
+        follow_id = request.GET.get('his_id')
+        print('-------------------')
+        print(user_id)
+        print(follow_id)
+
+        if user_id and follow_id:
+            is_follow = Follow.objects.filter(follow_id=follow_id, user=user_id, is_delete=0).exists()
+
+            if is_follow:
+                # 已经关注了
+                return JsonResponse({"code": 201})
+            else:
+                # 添加关注
+                print('-------------------')
+                print(user_id)
+                print(follow_id)
+                user_ins = User.objects.get(id=user_id)
+                Follow.objects.create(follow_id=follow_id, user=user_ins)
+                return JsonResponse({"code": 200})
+        else:
+            return JsonResponse({"errmsg": "该用户不存在"})
+
+
+# 取消关注
+class CancelFollow(View):
+    def get(self,request):
+        user_id = request.GET.get('user_id')
+        follow_id = request.GET.get('his_id')
+
+        if user_id and follow_id:
+            is_follow = Follow.objects.filter(follow_id=follow_id, user=user_id, is_delete=0).exists()
+
+            if is_follow:
+                # 确实已经关注了，修改一下状态，取消关注
+                Follow.objects.filter(follow_id=follow_id, user=user_id).update(is_delete=1)
+                return JsonResponse({"code": 200})
+        else:
+            return JsonResponse({"errmsg": "该用户不存在"})
+
+
+
+# 搜索功能  根据输入的关键字  查询出 1.带有关键字的用户 2.带有关键字的moment
+class SearchView(View):
+    def post(self,request):
+        school_id = request.POST.get('school_id')
+        key_words = request.POST.get('key_words')
+
+        if school_id and key_words:
+            user = User.objects.filter(school=school_id,nick__icontains=key_words).values('id','nick','head_qn_url').order_by('-id')
+            moment = Moment.objects.filter(school=school_id,content__icontains=key_words).values(
+                'id', 'content', 'good_num', 'publish_date', 'publish_time', 'tag', 'comment_num', 'view_num',
+                'comment_num',u_nick=F('user__nick'), u_img=F('user__head_image'), u_id=F('user__id')).order_by('-id')
+
+            data = {}
+            data['code'] = 200
+            data['user_list'] = list(user)
+            data['moment_list'] = list(moment)
+            return JsonResponse(data)
+
+        else:
+            return JsonResponse({"errmsg":"未选择学校或者未接收到关键字参数"})
 
 
 

@@ -131,6 +131,7 @@ class GoodAdmin(admin.ModelAdmin):
     # id 排序
     ordering = ['-id']
 
+
 # 举报
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):

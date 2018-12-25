@@ -7,7 +7,7 @@ from django.db.models import Count, F
 from utils.qiniu_upload import qi_local_upload
 from pro_wait.settings import MEDIA_ROOT
 
-from second.models import Second, SecondImg
+from second.models import Second, SecondImg, SecondComment, SecondReplyComment
 from user.models import User, School
 
 import copy
@@ -101,5 +101,125 @@ class AddView(View):
             return JsonResponse({'errmsg': '尚未选择学校'})
 
 
+# 二手 详情
+class SecondDetailView(View):
+    def get(self,request):
+        second_id = request.GET.get('second_id')
+        user_id = request.GET.get('user_id')
+
+        if second_id:
+            # 浏览 +1
+            look_this = Second.objects.get(id=second_id)
+            view_num = look_this.view_num + 1
+            Second.objects.filter(id=second_id).update(view_num=view_num)
+
+            # ======================================二手详情================================
+            # 查询 详情和评论
+            second = Second.objects.filter(id=second_id).values(
+                'id',
+                'content',
+                'price',
+                'view_num',
+                'want_num',
+                'report_num',
+                'create_date',
+                'create_time',
+                'is_first',
+                'is_type',
+                'is_sale',
+                c_id=F('creator__id'),
+                c_nick=F('creator__nick'),
+                c_head=F('creator__head_qn_url')
+            )
+
+            # 查发布图片
+            img = list(SecondImg.objects.filter(second=second_id).values('id', 'qiniu_img', 'second'))
+
+            # ======================================二手· 留言================================
+            # 二手id 用户id  ---->  用户昵称，用户头像, 评论id，评论内容,排序
+            comment = SecondComment.objects.filter(second=second_id).values(
+                'id',
+                'user',
+                'content',
+                'comment_date',
+                'replay_num',
+                c_id=F('user__id'),
+                c_nick=F('user__nick'),
+                c_head=F('user__head_qn_url')
+            ).order_by('-id')
+
+            data = {}
+            # 将每个二级评论添加到对应的一级评论上
+            for item in list(comment):
+                # 获取一级评论id
+                comment_id = item.get('id')
+                one_replay = SecondReplyComment.objects.filter(comment=comment_id).values(
+                    'id',
+                    'content',
+                    p_nick=F('parent__user__nick'),
+                    c_nick=F('user__nick'),
+                    c_id=F('user__id')
+                ).order_by('id')
+
+                # 字典
+                item['replycomment'] = list(one_replay)
+
+            data['code'] = 200
+            data['img']=list(img)
+            data['second_data'] = list(second)
+            data['comment_data'] = list(comment)
+
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'errmsg': '请求发生错误'})
 
 
+# 添加 一级评论
+class AddCommentView(View):
+    def post(self, request):
+        second_id = request.POST.get('second_id')
+        user_id = request.POST.get('user_id')
+        content = request.POST.get('content')
+
+        if second_id and user_id:
+            # 对象实例
+            user_ins= User.objects.get(id=user_id)
+            second_ins = Second.objects.get(id=second_id)
+            SecondComment.objects.create(content=content, user=user_ins, second=second_ins )
+
+            return JsonResponse({'msg':'数据未保存成功！'})
+        else:
+            return JsonResponse({'msg': '数据未保存成功！'})
+
+
+# 添加 二级评论
+class ReplyCommentView(View):
+    def post(self,request):
+        comment_id = request.POST.get('comment_id')
+        commentator_id = request.POST.get('user_id')
+        second_id = request.POST.get('second_id')
+        reply_id = request.POST.get('reply_id')
+        reply_content = request.POST.get('reply_content')
+
+        user_ins = User.objects.get(id=commentator_id)
+        comment_ins = SecondComment.objects.get(id=comment_id)
+        second_ins = Second.objects.get(id=second_id)
+
+        # 如果是 回复的回复
+        if reply_id :
+
+            comment_reply_ins = SecondReplyComment.objects.get(id=reply_id)
+            reply_comment = SecondReplyComment.objects.create(content=reply_content, user=user_ins, second=second_ins,
+                                                        comment=comment_ins,parent=comment_reply_ins)
+        else:
+            reply_comment = SecondReplyComment.objects.create(content=reply_content,user=user_ins,second=second_ins,comment=comment_ins)
+
+        if reply_comment:
+            # 回复数量+1
+            comment = SecondComment.objects.get(id=comment_id)
+            replay_num = comment.replay_num + 1
+            SecondComment.objects.filter(id=comment_id).update(replay_num=replay_num)
+
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'errmsg': '数据没有保存成功！'})

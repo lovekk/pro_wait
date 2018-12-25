@@ -18,7 +18,7 @@ class Moment(models.Model):
         (1, '同步全国'),
     )
     content = models.CharField(max_length=500, verbose_name="动态内容", default="")
-    publish_date = models.DateField(auto_now_add=True, verbose_name="发表时间")
+    publish_date = models.DateField(auto_now_add=True, verbose_name="发表日期")
     publish_time = models.TimeField(auto_now_add=True, verbose_name="发表时间")
     tag = models.CharField(max_length=30,verbose_name="标签",default="")
     good_num = models.IntegerField(verbose_name="点赞数量",default=0)
@@ -28,7 +28,7 @@ class Moment(models.Model):
     report_num = models.IntegerField(verbose_name="举报数", default=0)
     is_first = models.SmallIntegerField(default=0, choices=first_choices, verbose_name='置顶')
     is_show = models.SmallIntegerField(default=0, choices=show_choices, verbose_name='是否删除')
-    is_global = models.SmallIntegerField(default=1, choices=show_choices, verbose_name='是否同步全国')
+    is_global = models.SmallIntegerField(default=1, choices=global_choices, verbose_name='是否同步全国')
 
     school = models.ForeignKey('user.School',verbose_name='学校',on_delete=models.CASCADE, null=True)
     user = models.ForeignKey('user.User', verbose_name='用户', on_delete=models.CASCADE, null=True)
