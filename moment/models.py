@@ -38,7 +38,7 @@ class Moment(models.Model):
 
     class Meta:
         db_table = 'dn_moment'
-        verbose_name = "发现·动态内容"
+        verbose_name = "发现·发布内容"
         verbose_name_plural = verbose_name
 
 
@@ -184,7 +184,7 @@ class CommentGood(models.Model):
 
     class Meta:
         db_table = 'dn_moment_comment_good'
-        verbose_name = "发现·评论点赞"
+        verbose_name = "发现·评论·点赞"
         verbose_name_plural = verbose_name
 
 
@@ -203,7 +203,7 @@ class ReplyComment(models.Model):
 
     class Meta:
         db_table = 'dn_moment_comment_reply'
-        verbose_name = "发现·回复评论"
+        verbose_name = "发现·评论·回复"
         verbose_name_plural = verbose_name
 
 

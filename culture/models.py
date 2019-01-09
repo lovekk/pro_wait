@@ -5,30 +5,17 @@ from datetime import datetime
 import user
 
 
-# 校园文化评论
-class CultureComment(models.Model):
-    comment_date = models.DateTimeField(auto_now_add=True, verbose_name="评论时间")
-    create_date = models.DateField(auto_now_add=True, verbose_name="创建日期")
-    content = models.CharField(max_length=100,verbose_name="评论内容",default="")
-    commentator = models.ForeignKey('user.User',verbose_name='评论者',on_delete=models.CASCADE,null=True)
-    culture = models.ForeignKey('Culture', verbose_name='校园文化', on_delete=models.CASCADE, null=True)
-
-    class Meta:
-        db_table = 'dn_culture_comment'
-        verbose_name = "评论"
-        verbose_name_plural = verbose_name
-
-
 # 校园文化
 class Culture(models.Model):
     title = models.CharField(max_length=50,verbose_name="文化标题",default="")
     introduction = models.TextField(verbose_name="文化简介",default="")
-
     content = HTMLField(verbose_name="文化内容")
     editor = models.CharField(max_length=10,verbose_name="编辑人员",default="")
     publish_date = models.DateField(auto_now_add=True, verbose_name="发表日期")
     create_date = models.DateTimeField(auto_now_add=True,verbose_name="发表时间")
     view_num = models.IntegerField(verbose_name="浏览量",default=0)
+    comment_num = models.IntegerField(verbose_name="评论数",default=0)
+
     school = models.ForeignKey('user.School', verbose_name='学校', on_delete=models.CASCADE, null=True)
 
     class Meta:
@@ -58,3 +45,17 @@ class Culture(models.Model):
             return str(self.content)
     short_content.allow_tags = True
     short_content.short_description = u"文化内容"
+
+
+# 校园文化评论
+class CultureComment(models.Model):
+    comment_date = models.DateTimeField(auto_now_add=True, verbose_name="评论时间")
+    create_date = models.DateField(auto_now_add=True, verbose_name="创建日期")
+    content = models.CharField(max_length=100,verbose_name="评论内容",default="")
+    commentator = models.ForeignKey('user.User',verbose_name='评论者',on_delete=models.CASCADE,null=True)
+    culture = models.ForeignKey('Culture', verbose_name='校园文化', on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        db_table = 'dn_culture_comment'
+        verbose_name = "校园文化·评论"
+        verbose_name_plural = verbose_name

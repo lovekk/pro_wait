@@ -7,8 +7,10 @@ class Appoint(models.Model):
     address = models.CharField(max_length=50,verbose_name="预约地址", default="")
     phone_num = models.CharField(max_length=15, verbose_name="手机号", default="")
     remark = models.CharField(max_length=200,verbose_name="备注",default="")
-    money = models.IntegerField(verbose_name="单次回收积分",default=0)
+    money = models.IntegerField(verbose_name="单次回收积分整数",default=0)
+    weight = models.DecimalField(max_digits=4,decimal_places=2,verbose_name="重量小数",default=0.0)
     bag_num = models.CharField(max_length=30,verbose_name="袋子编号", default="")
+    worker_num = models.CharField(max_length=30,verbose_name="称重工作人员编号", default="")
     create_date = models.DateField(auto_now_add=True, verbose_name="预约创建日期")
     create_time = models.TimeField(auto_now_add=True, verbose_name="预约创建时间")
     update_datetime = models.DateTimeField(auto_now=True, verbose_name="更新时间")
@@ -19,7 +21,7 @@ class Appoint(models.Model):
 
     class Meta:
         db_table = 'dn_recovery_appoint'
-        verbose_name = "回收预约"
+        verbose_name = "回收·预约"
         verbose_name_plural = verbose_name
 
 
@@ -34,7 +36,7 @@ class MyRank(models.Model):
 
     class Meta:
         db_table = 'dn_recovery_rank'
-        verbose_name = "回收个人排名信息"
+        verbose_name = "回收·排名榜"
         verbose_name_plural = verbose_name
 
 
@@ -47,7 +49,7 @@ class Price(models.Model):
 
     class Meta:
         db_table = 'dn_recovery_price'
-        verbose_name = "回收物品价格"
+        verbose_name = "回收·物品价格"
         verbose_name_plural = verbose_name
 
 
@@ -58,7 +60,7 @@ class Bag(models.Model):
 
     class Meta:
         db_table = 'dn_recovery_bag'
-        verbose_name = "回收袋信息"
+        verbose_name = "回收·袋子编号"
         verbose_name_plural = verbose_name
 
 
@@ -72,7 +74,7 @@ class Tips(models.Model):
 
     class Meta:
         db_table = 'dn_recovery_tips'
-        verbose_name = "回收学校提示信息"
+        verbose_name = "回收·学校提示"
         verbose_name_plural = verbose_name
 
 
@@ -85,7 +87,7 @@ class Introduction(models.Model):
 
     class Meta:
         db_table = 'dn_recovery_introduction'
-        verbose_name = "回收环保知识介绍"
+        verbose_name = "回收·环保知识介绍"
         verbose_name_plural = verbose_name
 
 

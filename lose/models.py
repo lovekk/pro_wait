@@ -31,7 +31,7 @@ class Lose(models.Model):
 
     class Meta:
         db_table = 'dn_lose'
-        verbose_name = "失物招领发布"
+        verbose_name = "失物招领·发布"
         verbose_name_plural = verbose_name
 
     def __str__(self):
@@ -48,7 +48,7 @@ class LoseImg(models.Model):
 
     class Meta:
         db_table = 'dn_lose_img'
-        verbose_name = "失物招领图片"
+        verbose_name = "失物招领·图片"
         verbose_name_plural = verbose_name
 
 
@@ -71,7 +71,7 @@ class LoseComment(models.Model):
 
     class Meta:
         db_table = 'dn_lose_comment'
-        verbose_name = "失物招领评论"
+        verbose_name = "失物招领·评论"
         verbose_name_plural = verbose_name
 
 
@@ -89,6 +89,6 @@ class LoseReplyComment(models.Model):
 
     class Meta:
         db_table = 'dn_lose_comment_reply'
-        verbose_name = "失物招领回复评论"
+        verbose_name = "失物招领·回复评论"
         verbose_name_plural = verbose_name
 

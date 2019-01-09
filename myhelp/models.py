@@ -7,6 +7,7 @@ class Help(models.Model):
     publish_time = models.TimeField(auto_now_add=True, verbose_name="发布时间")
     price = models.IntegerField(verbose_name="价格",default=0)
     report_num = models.IntegerField(verbose_name="举报数", default=0)
+    view_num = models.IntegerField(verbose_name="浏览量", default=0)
     is_online = models.SmallIntegerField(default=0, choices=((0, '线上'),(1, '线下')), verbose_name='线上线下')
     is_all_school =  models.SmallIntegerField(default=0, choices=((0, '本校'),(1, '所有学校')), verbose_name='是否所有学校可见')
     is_show = models.SmallIntegerField(default=0, choices=((0, '未删除'),(1, '已经删除')), verbose_name='是否取消')
@@ -61,24 +62,62 @@ class HelpComment(models.Model):
         (0, '未删除'),
         (1, '已经删除'),
     )
-    content = models.CharField(max_length=100,verbose_name="评论内容",default="")
+    content = models.CharField(max_length=300,verbose_name="评论内容",default="")
     comment_date = models.DateField(auto_now_add=True, verbose_name="评论日期")
     comment_time = models.TimeField(auto_now_add=True, verbose_name="评论时间")
-    is_show = models.SmallIntegerField(default=0, choices=show_choices, verbose_name='是否删除')
+    is_show = models.SmallIntegerField(default=0, choices=show_choices, verbose_name='是否显示')
 
     user = models.ForeignKey('user.User', verbose_name='用户', on_delete=models.CASCADE, null=True)
     myhelp = models.ForeignKey('Help', verbose_name='Help_id', on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return self.content
 
     class Meta:
         db_table = 'dn_help_comment'
         verbose_name = "help·评论"
         verbose_name_plural = verbose_name
 
+
+# 评论 图片表
+class HelpCommentImage(models.Model):
+    qiniu_img = models.CharField(max_length=100, verbose_name="七牛云地址", default="")
+    local_img = models.ImageField(verbose_name="本地地址", upload_to='myhelp_comment_img/%Y/%m/%d', default="")
+    publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
+
+    comment = models.ForeignKey('HelpComment', verbose_name='评论id', on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        db_table = 'dn_help_comment_image'
+        verbose_name = "Help·评论·图片"
+        verbose_name_plural = verbose_name
+
+
+
+# 评论回复表 二级评论
+class HelpReplyComment(models.Model):
+
+    content = models.CharField(max_length=120,verbose_name="评论内容",default="")
+    comment_date = models.DateField(auto_now_add=True, verbose_name="回复评论日期")
+    comment_time = models.TimeField(auto_now_add=True, verbose_name="回复评论时间")
+
+    user = models.ForeignKey('user.User', verbose_name='用户', on_delete=models.CASCADE, null=True)
+    myhelp = models.ForeignKey('Help', verbose_name='Help', on_delete=models.CASCADE, null=True)
+    comment = models.ForeignKey('HelpComment', verbose_name='评论', on_delete=models.CASCADE, null=True)
+    parent = models.ForeignKey('self', verbose_name='自关联的父级', on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        db_table = 'dn_help_comment_reply'
+        verbose_name = "Help·评论·回复"
+        verbose_name_plural = verbose_name
+
+
 # 举报表
 class HelpReport(models.Model):
+    publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
+
     myhelp = models.ForeignKey('Help',verbose_name='Help_id',on_delete=models.CASCADE, null=True)
     user = models.ForeignKey('user.User', verbose_name='用户id', on_delete=models.CASCADE, null=True)
-    publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
 
     class Meta:
         db_table = 'dn_help_report'

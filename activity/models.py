@@ -5,15 +5,21 @@ from datetime import datetime
 
 # 活动评论
 class ActivityComment(models.Model):
+    show_choices = (
+        (0, '显示'),
+        (1, '已删除'),
+    )
     comment_datetime = models.DateTimeField(default=datetime.now, verbose_name="评论时间")
     comment_date = models.DateField(auto_now_add=True, verbose_name="创建日期")
     content = models.CharField(max_length=100,verbose_name="评论内容",default="")
+    is_show = models.SmallIntegerField(default=0, choices=show_choices, verbose_name='是否显示')
+
     commentator = models.ForeignKey('user.User',verbose_name='评论者',on_delete=models.CASCADE,null=True)
     activity = models.ForeignKey('Activity', verbose_name='校园活动', on_delete=models.CASCADE, null=True)
 
     class Meta:
         db_table = 'dn_activity_comment'
-        verbose_name = "评论"
+        verbose_name = "校园活动·评论"
         verbose_name_plural = verbose_name
 
 # 活动

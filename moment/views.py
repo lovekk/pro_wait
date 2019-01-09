@@ -147,10 +147,12 @@ class AddView(View):
         print(video_size)
 
         if school_id and creator_id:
+            print('通过id进来了')
             # 保存文本数据
             user_ins = User.objects.get(id=creator_id)
             school_ins = School.objects.get(id=school_id)
             moment_create = Moment.objects.create(content=content, tag=tag, school=school_ins, user=user_ins)
+            print(moment_create)
 
             # 保存 外键的 图片数据
             # 这一块 写的 绝望  这次再看看 还好 总感觉不是最优写法
@@ -158,23 +160,32 @@ class AddView(View):
                 for img in img_list:
                     # 先保存到本地 不保存七牛 因为直接用七牛的put_data提示报错 期望不是InMemoryUploadedFile类型
                     # 不怕图片名称重复 django处理了
+                    print('图片前')
                     save_img = Image.objects.create(local_img=img, moment=moment_create)
-
+                    print('图片后')
+                    print(save_img)
                     # 下面做七牛保存
                     moment_local_img = str(MEDIA_ROOT) + '/' + str(save_img.local_img)  # 拼接本地绝对路径
+                    print(moment_local_img)
                     moment_img_id = save_img.id  # 获取当前本地图片的id
+                    print('七牛云前')
                     qi_local_img = qi_local_upload(moment_local_img)  # 七牛上传
+                    print('七牛云后')
+                    print(qi_local_img)
                     Image.objects.filter(id=moment_img_id).update(qiniu_img=qi_local_img)  # 更新七牛数据
 
             # 保存 外键音频
             if voice_one and moment_create:
                 # django 文件上传
                 save_voice = Voice.objects.create(local_voice=voice_one, voice_time=voice_time, moment=moment_create)
-
+                print(save_voice)
                 # 下面做七牛保存录音
                 moment_voice_one = str(MEDIA_ROOT) + '/' + str(save_voice.local_voice)  # 拼接本地绝对路径
                 moment_voice_id = save_voice.id  # 获取当前本地图片的id
+                print(moment_voice_one)
+                print('音频七牛云前')
                 qi_local_voice = qi_local_upload(moment_voice_one)  # 上传本地录音到七牛服务器
+                print(qi_local_voice)
                 Voice.objects.filter(id=moment_voice_id).update(qiniu_voice=qi_local_voice)  # 更新七牛数据
 
             # 保存 外键视频
@@ -193,8 +204,9 @@ class AddView(View):
             return JsonResponse({'errmsg': '尚未选择学校'})
 
 
-# 发现 具体内容 详情 正文
+
 class MomentDetailView(View):
+    # 发现 具体内容 详情 正文
     def get(self,request):
         moment_id = request.GET.get('moment_id')
         u_id = request.GET.get('u_id')
@@ -205,7 +217,6 @@ class MomentDetailView(View):
             look_this = Moment.objects.get(id=moment_id)
             view_num = look_this.view_num + 1
             Moment.objects.filter(id=moment_id).update(view_num=view_num)
-
             # ======================================发现详情================================
             # 查询 详情和评论
             moment = Moment.objects.filter(id=moment_id).values(
@@ -222,17 +233,12 @@ class MomentDetailView(View):
                 c_nick=F('user__nick'),
                 c_head=F('user__head_qn_url')
             )
-
             # 查发布图片
             img = list(Image.objects.filter(moment=moment_id).values('id', 'qiniu_img', 'moment'))
-
-            # 查看 录音
+            # 查看 音频
             voice = list(Voice.objects.filter(moment=moment_id).values('id', 'qiniu_voice','voice_time', 'moment'))
-
             # 查看 视频
             video = list(Video.objects.filter(moment=moment_id).values('id', 'qiniu_video', 'moment'))
-
-
             # ======================================发现·评论================================
             # 发现id 用户id  ---->  用户昵称，用户头像, 评论id，评论内容,排序
             comment = Comment.objects.filter(moment=moment_id).values(
@@ -247,7 +253,6 @@ class MomentDetailView(View):
             ).order_by('-id')
 
             data = {}  # 总数据
-
             # 将每个二级评论添加到对应的一级评论上
             for item in list(comment):
                 # 获取一级评论id
@@ -273,6 +278,7 @@ class MomentDetailView(View):
             data['voice']=list(voice)
             data['video']=list(video)
             data['moment_data'] = list(moment)
+
             # 查看是否关注
             if his_id == u_id:
                 data['follow'] = 2
@@ -285,10 +291,24 @@ class MomentDetailView(View):
                     data['follow'] = 0  #没有关注
 
             data['comment_data'] = list(comment)
-
             return JsonResponse(data)
         else:
             return JsonResponse({'errmsg': '请求发生错误'})
+
+
+# 发现 删除，从我的个人主页删除
+class DelMoment(View):
+    def get(self, request):
+        moment_id = request.GET.get('moment_id')
+        user_id = request.GET.get('user_id')
+
+        is_show = Moment.objects.filter(moment=moment_id, user=user_id, is_show=0).exists()
+        if is_show:
+            # 删除 假删 修改状态而已
+            Moment.objects.filter(moment=moment_id).update(is_show=1)
+            return JsonResponse({'msg': '已成功删除！'})
+        else:
+            return JsonResponse({'msg': '抱歉，删除失败！'})
 
 
 # 发现 点赞
@@ -585,24 +605,80 @@ class CancelFollow(View):
 
 # 搜索功能  根据输入的关键字  查询出 1.带有关键字的用户 2.带有关键字的moment
 class SearchView(View):
-    def post(self,request):
-        school_id = request.POST.get('school_id')
-        key_words = request.POST.get('key_words')
+    def get(self,request):
+        school_id = request.GET.get('school_id')
+        user_id = request.GET.get('user_id')
+        key_words = request.GET.get('key_words')
+        print(school_id)
+        print(user_id)
+        print(key_words)
 
-        if school_id and key_words:
-            user = User.objects.filter(school=school_id,nick__icontains=key_words).values('id','nick','head_qn_url').order_by('-id')
-            moment = Moment.objects.filter(school=school_id,content__icontains=key_words).values(
-                'id', 'content', 'good_num', 'publish_date', 'publish_time', 'tag', 'comment_num', 'view_num',
-                'comment_num',u_nick=F('user__nick'), u_img=F('user__head_image'), u_id=F('user__id')).order_by('-id')
+        if school_id and key_words and user_id:
+            user = User.objects.filter(school=school_id,nick__icontains=key_words).values('id','nick','head_qn_url','school_name')
 
+            # 一对多 反查外键
+            # 先查询 所有id
+
+            moments_first = Moment.objects.filter(school=school_id, is_show=0, content__icontains=key_words).values('id').order_by('-id')
+
+            print(moments_first)
             data = {}
+            for_one = {}  # 单次数据
+            all_list = []  # 总数据
+
+            # 遍历id
+            for item in list(moments_first):
+                # print(item.get('id'))  # {'id': 43}
+                item_id = item.get('id')
+
+                # 浏览 +1
+                look_this = Moment.objects.get(id=item_id)
+                view_num = look_this.view_num + 1
+                Moment.objects.filter(id=item_id).update(view_num=view_num)
+
+                # 查发布内容
+                for_t = Moment.objects.filter(id=item_id).values(
+                    'id', 'content', 'good_num', 'publish_date', 'publish_time', 'tag', 'comment_num', 'view_num',
+                    'comment_num',
+                    u_nick=F('user__nick'), u_img=F('user__head_qn_url'), u_id=F('user__id'))
+
+                for_text = list(for_t)
+
+                # 查发布图片
+                for_img = list(Image.objects.filter(moment=item_id).values('id', 'qiniu_img', 'moment'))
+
+                # 查看 录音
+                for_voice = list(
+                    Voice.objects.filter(moment=item_id).values('id', 'qiniu_voice', 'local_voice', 'voice_time',
+                                                                'moment'))
+
+                # 查看 视频
+                for_video = list(Video.objects.filter(moment=item_id).values('id', 'qiniu_video', 'moment'))
+
+                # 是否点赞
+                for_good = Good.objects.filter(moment=item_id, user=user_id).exists()
+
+                for_one['id'] = item_id
+                for_one['for_text'] = for_text
+                for_one['for_img'] = for_img
+                for_one['for_voice'] = for_voice
+                for_one['for_video'] = for_video
+                for_one['for_good'] = for_good
+
+                # 单个 追加
+                all_list.append(copy.deepcopy(for_one))
+                # print(for_one)
+
             data['code'] = 200
             data['user_list'] = list(user)
-            data['moment_list'] = list(moment)
+            data['all_list'] = all_list
+
+
             return JsonResponse(data)
 
         else:
             return JsonResponse({"errmsg":"未选择学校或者未接收到关键字参数"})
+
 
 
 

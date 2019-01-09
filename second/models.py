@@ -39,7 +39,7 @@ class Second(models.Model):
 
     class Meta:
         db_table = 'dn_second'
-        verbose_name = "校园二手发布"
+        verbose_name = "校园二手·发布"
         verbose_name_plural = verbose_name
 
     def __str__(self):
@@ -55,7 +55,7 @@ class SecondImg(models.Model):
 
     class Meta:
         db_table = 'dn_second_img'
-        verbose_name = "校园二手图片"
+        verbose_name = "校园二手·图片"
         verbose_name_plural = verbose_name
 
 
@@ -80,7 +80,7 @@ class SecondComment(models.Model):
 
     class Meta:
         db_table = 'dn_second_comment'
-        verbose_name = "校园二手评论"
+        verbose_name = "校园二手·评论"
         verbose_name_plural = verbose_name
 
 
@@ -98,6 +98,6 @@ class SecondReplyComment(models.Model):
 
     class Meta:
         db_table = 'dn_second_comment_reply'
-        verbose_name = "校园二手回复评论"
+        verbose_name = "校园二手·评论回复"
         verbose_name_plural = verbose_name
 

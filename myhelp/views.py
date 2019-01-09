@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.db.models import Count, F
 
 from user.models import User, School
-from myhelp.models import Help, HelpOrder, HelpImage, HelpReport, HelpComment
+from myhelp.models import Help, HelpOrder, HelpImage, HelpReport, HelpComment, HelpReplyComment, HelpCommentImage
 
 from utils.qiniu_upload import qi_local_upload, qi_upload
 from pro_wait.settings import MEDIA_ROOT
@@ -31,7 +31,7 @@ class HelpListView(View):
                 # 查发布内容
                 for_t = Help.objects.filter(id=item_id, is_show=0).values(
                     'id', 'content', 'publish_date', 'publish_time','price','is_online','is_all_school','is_show','status',
-                    u_nick=F('user__nick'), u_img=F('user__head_image'), u_id=F('user__id'))
+                    u_nick=F('user__nick'), u_img=F('user__head_qn_url'), u_id=F('user__id'))
 
                 for_text = list(for_t)
 
@@ -85,7 +85,8 @@ class HelpAddView(View):
                     left_integral = user.integral - price
                     User.objects.filter(id=user_id).update(integral=left_integral)
                     # 保存数据
-                    help_create = Help.objects.create(content=content,price=price,is_online=is_online,is_all_school=is_all_school,user=user,school=school)
+                    help_create = Help.objects.create(content=content,price=price,is_online=is_online,
+                                                      is_all_school=is_all_school,user=user,school=school)
                 else:
                     return JsonResponse({'errmsg': '积分不足，请充值！'})
 
@@ -152,6 +153,205 @@ class HelpFinishView(View):
 
         else:
             return JsonResponse({'errmsg':'未查到该help内容，或者还用户不存在'})
+
+
+# help详情
+class HelpDetailView(View):
+    def get(self, request):
+        help_id = request.GET.get('help_id')
+        u_id = request.GET.get('u_id')
+
+        print(help_id)
+        if help_id:
+            # 浏览 +1
+            look_this = Help.objects.get(id=help_id)
+            view_num = look_this.view_num + 1
+            Help.objects.filter(id=help_id).update(view_num=view_num)
+            # ======================================Help详情================================
+            # 查询 详情和评论
+            myhelp = Help.objects.filter(id=help_id).values(
+                'id',
+                'content',
+                'publish_date',
+                'publish_time',
+                'price',
+                'status',
+                'view_num',
+                'is_online',
+                'is_all_school',
+                'is_show',
+                c_id=F('user__id'),
+                c_nick=F('user__nick'),
+                c_head=F('user__head_qn_url')
+            )
+
+            # 查发布图片
+            img = list(HelpImage.objects.filter(myhelp=help_id).values('id', 'qiniu_img', 'myhelp'))
+
+            # ======================================Help·评论================================
+            # help id 用户id  ---->  用户昵称，用户头像, 评论id，评论内容,排序
+            comment = HelpComment.objects.filter(myhelp=help_id).values(
+                'id',
+                'content',
+                'comment_date',
+                'comment_time',
+                c_id=F('user__id'),
+                c_nick=F('user__nick'),
+                c_head=F('user__head_qn_url')
+            ).order_by('-id')
+
+            data = {}
+            # 将每个二级评论添加到对应的一级评论上
+            for item in list(comment):
+                # 获取一级评论id
+                for_comment_id = item.get('id')
+                # 图片
+                one_img = HelpCommentImage.objects.filter(comment=for_comment_id).values('qiniu_img')
+
+                one_replay = HelpReplyComment.objects.filter(comment=for_comment_id).values(
+                    'id', 'content', p_nick=F('parent__user__nick'), c_nick=F('user__nick'), u_id=F('user__id')
+                ).order_by('id')[0:5]
+
+                # 字典
+                item['one_img'] = list(one_img)
+
+                item['replycomment'] = list(one_replay)
+
+            data['code'] = 200
+            data['img'] = list(img)
+
+            data['myhelp_data'] = list(myhelp)
+            data['comment_data'] = list(comment)
+
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'errmsg': '请求发生错误'})
+
+
+# 添加一级评论
+class AddHelpCommentView(View):
+    def post(self, request):
+        myhelp_id = request.POST.get('help_id')
+        commentator_id = request.POST.get('user_id')
+        content = request.POST.get('content')
+
+        # 获取图片
+        local_image = request.FILES.getlist('img_list')
+
+        if myhelp_id and commentator_id:
+
+            user_ins = User.objects.get(id=commentator_id)
+            myhelp_ins = Help.objects.get(id=myhelp_id)
+
+            # 只有文本
+            comment_create = HelpComment.objects.create(content=content, user=user_ins, myhelp=myhelp_ins)
+
+            # 如果有图片
+            if local_image and comment_create:
+                for item in local_image:
+                    comment_image = HelpCommentImage.objects.create(local_img=item, comment=comment_create)
+                    # 保存 图到七牛云
+                    # 获取本地保存路径
+                    save_image = comment_image.local_img
+                    # 拼接本地绝对路径
+                    comment_image_one = str(MEDIA_ROOT) + '/' + str(save_image)
+                    # 上传本地图、音到七牛服务器
+                    qiniu_image = qi_local_upload(comment_image_one)
+                    # 更新七牛数据
+                    HelpCommentImage.objects.filter(id=comment_image.id).update(qiniu_img=qiniu_image)
+
+            if comment_create:
+                return JsonResponse({'code': 200})
+
+            else:
+                return JsonResponse({'msg': '数据未保存成功！'})
+        else:
+            return JsonResponse({'msg': '数据未保存成功！'})
+
+
+# 添加二级评论
+class ReplyHelpCommentView(View):
+    def post(self, request):
+        comment_id = request.POST.get('comment_id')
+        commentator_id = request.POST.get('user_id')
+        myhelp_id = request.POST.get('help_id')
+        reply_id = request.POST.get('reply_id')
+        reply_content = request.POST.get('reply_content')
+
+        user_ins = User.objects.get(id=commentator_id)
+        comment_ins = HelpComment.objects.get(id=comment_id)
+        myhelp_ins = Help.objects.get(id=myhelp_id)
+
+        # 如果是 回复的回复
+        if reply_id:
+            print('----------------------------------------------------------')
+            comment_reply_ins = HelpReplyComment.objects.get(id=reply_id)
+            reply_comment = HelpReplyComment.objects.create(content=reply_content, user=user_ins, myhelp=myhelp_ins,
+                                                            comment=comment_ins, parent=comment_reply_ins)
+        else:
+            reply_comment = HelpReplyComment.objects.create(content=reply_content, user=user_ins, myhelp=myhelp_ins,
+                                                            comment=comment_ins)
+        if reply_comment:
+
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'errmsg': '数据没有保存成功！'})
+
+
+
+# Help订单
+# 1.我发布的
+class PublishOrderView(View):
+    def get(self, request):
+        user_id = request.GET.get('user_id')
+        if user_id:
+            help = Help.objects.filter(user=user_id).values(
+                'content',
+                'publish_date',
+                'price',
+                'is_online',
+                'is_allschool',
+                c_head=F('order__user__head_qn_url'),
+                c_nick=F('order__user__nick'),
+                school=F('order__school__name'),
+                status=F('order__status'),
+                order_datetime=F('order__order_datetime'),
+                finished_datetime=F('order__finished_datetime')
+            ).order_by('-publish_date')
+
+            data = {}
+            data['code'] = 200
+            data['my_publish'] = list(help)
+        else:
+            return JsonResponse({'errmsg': '用户不存在'})
+
+
+# 1.我接单的
+class TakeOrderView(View):
+    def get(self, request):
+        user_id = request.GET.get('user_id')
+        if user_id:
+            order = HelpOrder.objects.filter(user=user_id)
+            help = Help.objects.filter(order=order).values(
+                'content',
+                'publish_date',
+                'price',
+                'is_online',
+                'is_allschool',
+                c_id=F('user__id'),
+                c_head=F('user__head_qn_url'),
+                c_nick=F('user__nick'),
+                school=F('school__name'),
+                status=F('order__status'),
+                order_datetime=F('order__order_datetime'),
+                finished_datetime=F('order__finished_datetime')
+            ).order_by('-publish_date')
+
+            data = {}
+            data['code'] = 200
+            data['my_take'] = list(help)
+        else:
+            return JsonResponse({'errmsg': '用户不存在'})
 
 
 

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from moment.models import Moment, Voice, Video, Image, Good, Comment, ReplyComment, Tag, Report, CommentGood
+from moment.models import CommentImage, CommentVoice, CommentVideo
 
 # 发现
 @admin.register(Moment)
@@ -72,7 +73,7 @@ class TagAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'add_time']
 
     # 每页显示条数
-    list_per_page = 20
+    list_per_page = 50
 
     # id 排序
     ordering = ['id']
@@ -137,6 +138,46 @@ class GoodAdmin(admin.ModelAdmin):
 class ReportAdmin(admin.ModelAdmin):
     # 显示的字段
     list_display = ['id', 'moment', 'user']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+
+# 评论图片
+@admin.register(CommentImage)
+class CommentImageAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'qiniu_img', 'local_img', 'publish_datetime', 'comment']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+
+# 回复语音
+@admin.register(CommentVoice)
+class CommentVoicetAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'qiniu_voice', 'local_voice', 'voice_time', 'publish_datetime', 'comment']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+
+# 评论 视频
+@admin.register(CommentVideo)
+class CommentVideoAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'qiniu_video', 'local_video', 'qiniu_video_img', 'local_video_img',
+                    'video_size', 'publish_datetime','comment']
 
     # 每页显示条数
     list_per_page = 50

@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import datetime
+from tinymce.models import HTMLField
 
 # 用户信息
 class User(models.Model):
@@ -62,7 +63,7 @@ class User(models.Model):
 
     class Meta:
         db_table = 'dn_user'
-        verbose_name = "用户信息"
+        verbose_name = "用户账号资料"
         verbose_name_plural = verbose_name
 
     def __str__(self):
@@ -86,7 +87,7 @@ class School(models.Model):
 
     class Meta:
         db_table = 'dn_school'
-        verbose_name = '学校信息'
+        verbose_name = '学校列表'
         verbose_name_plural = verbose_name
 
 
@@ -118,3 +119,60 @@ class FunctionModule(models.Model):
         db_table = 'dn_school_module'
         verbose_name = "学校模块"
         verbose_name_plural = verbose_name
+
+
+# 关于我们表
+class AboutWe(models.Model):
+    title = models.CharField(max_length=50, verbose_name="关于我们标题", default="")
+    content = HTMLField(verbose_name="关于我们内容")
+    create_date = models.DateTimeField(auto_now_add=True, verbose_name="创建日期")
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        db_table = 'dn_user_about'
+        verbose_name = "关于我们"
+        verbose_name_plural = verbose_name
+
+
+# 关于我们评论表
+class AboutWeComment(models.Model):
+    delete_choices = (
+        (0, '显示'),
+        (1, '已删除'),
+    )
+    comment = models.CharField(max_length=120,default='', verbose_name='评论内容')
+    create_date = models.DateField(auto_now_add=True, verbose_name="评论日期")
+    create_time = models.TimeField(auto_now_add=True, verbose_name="评论日期")
+    is_delete = models.SmallIntegerField(default=0, choices=delete_choices, verbose_name='是否显示')
+
+    user = models.ForeignKey('user',verbose_name='用户',on_delete=models.CASCADE,null=True)
+    about_we = models.ForeignKey('AboutWe',verbose_name='关于我们',on_delete=models.CASCADE,null=True)
+
+    class Meta:
+        db_table = 'dn_user_about_comment'
+        verbose_name = "关于我们·评论"
+        verbose_name_plural = verbose_name
+
+
+
+
+# 回收人员表
+class RecoveryPerson(models.Model):
+    use_choices = (
+        (0, '正在使用中...'),
+        (1, '暂停使用'),
+    )
+    log_num = models.CharField(max_length=11, default='', verbose_name='登录账户')
+    password = models.CharField(max_length=50,verbose_name='密码')
+    is_use = models.SmallIntegerField(default=0, choices=use_choices, verbose_name='账号状态是否开放')
+
+    school = models.ForeignKey('School',verbose_name='学校',on_delete=models.CASCADE,null=True)
+
+    class Meta:
+        db_table = 'dn_user_recovery_worker'
+        verbose_name = "工作人员·回收"
+        verbose_name_plural = verbose_name
+
+

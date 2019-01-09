@@ -25,7 +25,7 @@ def culture_content(request):
                 'create_date',
                 u_nick=F('commentator__nick'),
                 u_img=F('commentator__head_qn_url'),
-            ).order_by('-id')
+            ).order_by('-id')[0:100]
 
             data = {}
             data['code'] = 200
@@ -45,18 +45,16 @@ def add_comment(request):
         culture_id = request.POST.get('culture_id')
         comment = request.POST.get('comment')
         commentator_id = request.POST.get('commentator_id')
-        print(culture_id)
-        print(comment)
-        print(commentator_id)
 
         user_in = User.objects.get(id=commentator_id)
         cul_in = Culture.objects.get(id=culture_id)
-        # culture_comment = CultureComment.objects.create(comment=comment,culture=cul_in,commentator=user_in)
-        culture_comment = CultureComment(content=comment)
-        culture_comment.commentator = user_in
-        culture_comment.culture = cul_in
+        CultureComment.objects.create(content=comment,culture=cul_in,commentator=user_in)
 
-        culture_comment.save()
+        # 评论 +1
+        look_this = Culture.objects.get(id=culture_id)
+        com_num = look_this.comment_num + 1
+        Culture.objects.filter(id=culture_id).update(comment_num=com_num)
+
         return JsonResponse({'code':200})
     else:
         return JsonResponse({'errmsg':'提交评论失败'})

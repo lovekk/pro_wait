@@ -4,18 +4,17 @@ from django.db.models import Count, F,Sum
 from django.db import connection
 from django.views.generic import View
 
-from user.models import User, School, Follow, FunctionModule
-from moment.models import Moment
+from user.models import User, School, Follow, FunctionModule, AboutWe,AboutWeComment,RecoveryPerson
 from myhelp.models import Help
 from activity.models import Activity
 from article.models import Article
+from moment.models import Moment, Video, Image, Voice, Tag, Good, Report
 
 from utils.getModule import getModule
 from utils.qiniu_upload import qi_local_upload, qi_upload
 from pro_wait.settings import MEDIA_ROOT
 
-import importlib
-import hashlib
+import hashlib, copy
 
 
 # 测试首页
@@ -50,11 +49,11 @@ def login(request):
                 print(data)
                 return JsonResponse(data)
             else:
-                return JsonResponse({'errmsg': '密码不正确'})
+                return JsonResponse({'errmsg': '密码不正确!'})
         else:
-            return JsonResponse({'errmsg': '此手机号未注册'})
+            return JsonResponse({'errmsg': '此手机号未注册!'})
     else:
-        return JsonResponse({'errmsg':'请求发生错误'})
+        return JsonResponse({'errmsg':'请求发生错误!'})
 
 
 # 注册手机号是否已经使用
@@ -63,11 +62,11 @@ def register(request):
         phone_num = request.POST.get('phone_num')
         is_have = User.objects.filter(phone_num=phone_num).exists()
         if is_have:
-            return JsonResponse({'errmsg': '此手机号已经注册，可以直接登录'})
+            return JsonResponse({'errmsg': '此手机号已经注册，可以直接登录!'})
         else:
             return JsonResponse({'code': 200})
     else:
-        return JsonResponse({'errmsg':'发生错误'})
+        return JsonResponse({'errmsg':'请求发生错误!'})
 
 
 # 注册 用户名 性别 学校 头像上传
@@ -75,7 +74,6 @@ def register_msg(request):
     if request.method == 'POST':
         phone_num = request.POST.get('phone_num')
         password = request.POST.get('password')
-        password_md5 = hashlib.md5(password.encode(encoding='UTF-8')).hexdigest()
 
         nick = request.POST.get('nick')
         gender = request.POST.get('gender')
@@ -101,8 +99,17 @@ def register_msg(request):
         # pic.head_image = head_image
         # pic.save()
 
+        # 先判断是否重名
+        have_name = User.objects.filter(nick=nick).exists()
+        if have_name:
+            # 用户名已经存在
+            return JsonResponse({'code': 400})
+
         # 先更新用户信息
         if phone_num and password and nick and head_image and school_id:
+            # 加密
+            password_md5 = hashlib.md5(password.encode(encoding='UTF-8')).hexdigest()
+            # 创建
             user_create = User.objects.create(
                 phone_num=phone_num,
                 password=password_md5,
@@ -225,73 +232,161 @@ def getCodeImage(request):
 
 
 # ================================================我的 关注 粉丝 积分 主页 修改个人信息================================
-# 我的主页
+
+# 我自己的个人主页
 class HomePage(View):
     def get(self,request):
         user_id = request.GET.get('user_id')
         if user_id:
-            user = list(User.objects.filter(id=user_id).values('nick','head_qn_url','my_sign',school=F('school__name')))
-            # 点赞总数，评论总数，浏览总数
-            moment = list(Moment.objects.annotate(good_num_total=Sum('good_num'),comment_num_total=Sum('comment_num'),view_num_total=Sum('view_num')).filter(user=user_id).values('good_num_total','view_num_total','view_num_total'))
+            # 获赞数 评论数
+            moment_num = Moment.objects.filter(user=user_id).aggregate(Sum('good_num'),Sum('comment_num'))
+            # 粉丝数
+            fans_num = Follow.objects.filter(follow_id=user_id,is_delete=0).aggregate(Count('user'))
+            print(fans_num)
+            print(moment_num)
 
+            # 个人信息
+            user = User.objects.filter(id=user_id).values('id', 'nick', 'head_qn_url','school_name','my_sign')
+
+            # 一对多 反查外键
+            # 先查询 所有id
+
+            moments_first = Moment.objects.filter(is_show=0,user=user_id).values('id').order_by('-id')
+
+            print(moments_first)
             data = {}
+            for_one = {}  # 单次数据
+            all_list = []  # 总数据
+
+            # 遍历id
+            for item in list(moments_first):
+                # print(item.get('id'))  # {'id': 43}
+                item_id = item.get('id')
+
+                # 浏览 +1
+                look_this = Moment.objects.get(id=item_id)
+                view_num = look_this.view_num + 1
+                Moment.objects.filter(id=item_id).update(view_num=view_num)
+
+                # 查发布内容
+                for_t = Moment.objects.filter(id=item_id).values(
+                    'id', 'content', 'good_num', 'publish_date', 'publish_time', 'tag', 'comment_num', 'view_num',
+                    'comment_num',u_nick=F('user__nick'), u_img=F('user__head_qn_url'), u_id=F('user__id'))
+
+                for_text = list(for_t)
+
+                # 查发布图片
+                for_img = list(Image.objects.filter(moment=item_id).values('id', 'qiniu_img', 'moment'))
+
+                # 查看 录音
+                for_voice = list(
+                    Voice.objects.filter(moment=item_id).values('id', 'qiniu_voice', 'local_voice', 'voice_time','moment'))
+
+                # 查看 视频
+                for_video = list(Video.objects.filter(moment=item_id).values('id', 'qiniu_video', 'moment'))
+
+                # 是否点赞
+                for_good = Good.objects.filter(moment=item_id, user=user_id).exists()
+
+                for_one['id'] = item_id
+                for_one['for_text'] = for_text
+                for_one['for_img'] = for_img
+                for_one['for_voice'] = for_voice
+                for_one['for_video'] = for_video
+                for_one['for_good'] = for_good
+
+                # 单个 追加
+                all_list.append(copy.deepcopy(for_one))
+                # print(for_one)
+
             data['code'] = 200
-            data['user_msg'] = user
-            data['moment_msg'] = moment
+            data['fans_num'] = fans_num
+            data['moment_msg'] = moment_num
+            data['user_list'] = list(user)
+            data['all_list'] = all_list
             return JsonResponse(data)
         else:
             return JsonResponse({"errmsg": "改用户不存在"})
 
 
 #我的关注
-class MyCreate(View):
+class MyFollow(View):
     def get(self,request):
         user_id = request.GET.get('user_id')
         if user_id:
             # 查询出所有的关注
-            follows = Follow.objects.filter(user=user_id)
-
             data = {}
-            follow_list = []
-            for follow in follows:
-                follow_one = list(User.objects.filter(id=follow.follow_id).values('nick','head_qn_url'))
-                follow_list.append(follow_one)
+            # 不用深拷贝 遍历追加的方法
+            # follows = Follow.objects.filter(user=user_id, is_delete=0).values('follow_id').order_by('-id')
+            # for follow_item in list(follows):
+            #     print(follow_item)
+            #     # 获取id
+            #     for_u_id = follow_item.get('follow_id')
+            #     follow_one = User.objects.filter(id=for_u_id).values('nick','head_qn_url','school_name')
+            #     # 字典
+            #     follow_item['follow_one'] = list(follow_one)
+
+            follow_u_id = []
+            # 找到所有follow_id
+            follows = list(Follow.objects.filter(user=user_id,is_delete=0).values('follow_id').order_by('-id'))
+            # 追加到一个列表里面
+            for item in follows:
+                print(item)
+                one_id = item['follow_id']
+                follow_u_id.append(one_id)
+            # 用户id 在这个列表里
+            follow_list = User.objects.filter(id__in=follow_u_id).values('id', 'nick','head_qn_url','school_name')
 
             data['code'] = 200
-            data['follow_list'] = follow_list
+            data['follow_list'] = list(follow_list)
+
             return JsonResponse(data)
         else:
-            return JsonResponse({"errmsg": "改用户不存在"})
+            return JsonResponse({"errmsg": "用户不存在"})
+
 
 # 我的粉丝
 class MyFans(View):
     def get(self,request):
         user_id = request.GET.get('user_id')
         if user_id:
-            fans = Follow.objects.filter(follow_id=user_id).values('user__nick','user__head_qn_url','user__school_name')
+            fans = Follow.objects.filter(follow_id=user_id,is_delete=0).values(
+                u_nick = F('user__nick'),
+                u_head_img = F('user__head_qn_url'),
+                u_school_name = F('user__school_name')
+            ).order_by('-id')
             data = {}
             data['code'] = 200
             data['fans'] = list(fans)
             return JsonResponse(data)
         else:
-            return JsonResponse({"errmsg": "改用户不存在"})
+            return JsonResponse({"errmsg": "用户不存在"})
 
-# 我的积分
-class MyIntegral(View):
+
+# 我的积分 关注数 积分数
+class MyNum(View):
     # 总积分，help积分，垃圾回收积分
     def get(self,request):
         user_id = request.GET.get('user_id')
         if user_id:
-            integral_total = list(User.objects.filter(id=user_id).values('integral'))
+            # 积分数
+            integral_total = User.objects.get(id=user_id).integral
+            # 粉丝数
+            fans_num = Follow.objects.filter(follow_id=user_id,is_delete=0).aggregate(Count('user'))
+            # 关注数量数
+            follow_num = Follow.objects.filter(user=user_id,is_delete=0).aggregate(Count('follow_id'))
             data = {}
             data['code'] = 200
-            data['integral_total'] = integral_total
+            data['integral_num'] = integral_total
+            data['fans_num'] = fans_num
+            data['follow_num'] = follow_num
+            return JsonResponse(data)
         else:
             return JsonResponse({"errmsg": "改用户不存在"})
 
 
 # 更新个人信息
-class UpdateInfoView(View):
+class UpdateUserInfoView(View):
     def post(self,request):
         user_id = request.POST.get('user_id')
         if user_id:
@@ -304,6 +399,65 @@ class UpdateInfoView(View):
 
         else:
             return JsonResponse({'errmsg':'该用户不存在'})
+
+
+# 更新个人信息 头像
+class UpdateUserHeadView(View):
+    def post(self,request):
+        user_id = request.POST.get('user_id')
+        if user_id:
+            nick = request.POST.get('nick')
+            password = request.POST.get('password')
+            head_image = request.FILES.get('head_image')
+            my_sign = request.POST.get('my_sign')
+
+            User.objects.filter(id=user_id).update(nick=nick,password=password,head_image=head_image,my_sign=my_sign)
+
+        else:
+            return JsonResponse({'errmsg':'该用户不存在'})
+
+
+# 关于我们
+class AboutWeView(View):
+   def get(self,request):
+        aboutwe = AboutWe.objects.values('title','content')
+        comment = AboutWeComment.objects.filter(about_we=aboutwe).values(
+            'comment',
+            'create_date',
+            nick = F('user__nick'),
+            u_img=F('user__head_image'),
+            u_id=F('user__id')
+        ).order_by('-id')
+        if aboutwe and comment :
+            data = {}
+            data['code'] = 200
+            data['aboutwe_data'] = list(aboutwe)
+            data['comment_data'] = list(comment)
+
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'errmsg':'请求发生错误'})
+
+
+# 添加评论
+class AddCommentView(View):
+    def post(self,request):
+
+        aboutwe_id = request.POST.get('aboutwe_id')
+        comment = request.POST.get('comment')
+        commentator_id = request.POST.get('commentator_id')
+
+        if aboutwe_id and commentator_id:
+            user = User.objects.get(id=commentator_id)
+            aboutwe = AboutWe.objects.get(id=aboutwe_id)
+            comment_creat = AboutWeComment.objects.create(comment=comment,user=user,about_we=aboutwe)
+            if comment_creat:
+                return JsonResponse({'code':200})
+            else:
+                return JsonResponse({'errmsg': '评论失败'})
+        else:
+            return JsonResponse({'errmsg': '没有接收到数据'})
+
 
 
 

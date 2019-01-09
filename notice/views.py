@@ -7,7 +7,8 @@ from .models import Notice
 def notice_list(request):
     if request.method == 'GET':
         school_id = request.GET.get('school_id')
-        notice = Notice.objects.filter(school=school_id).values('id','title','publish_date')
+        # 按sort_num排序
+        notice = Notice.objects.filter(school=school_id,is_show=0).values('id','title','publish_date').order_by('sort_num')
         data = {}
         data['code'] = 200
         data['notice_data'] = list(notice)
@@ -30,7 +31,6 @@ def notice_detail(request):
 
             # 查询
             notice = Notice.objects.filter(school=school_id,id=notice_id).values()
-            print(notice)
             data = {}
             data['code'] = 200
             data['notice_data'] = list(notice)
