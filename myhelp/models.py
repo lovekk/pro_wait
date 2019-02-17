@@ -11,7 +11,7 @@ class Help(models.Model):
     is_online = models.SmallIntegerField(default=0, choices=((0, '线上'),(1, '线下')), verbose_name='线上线下')
     is_all_school =  models.SmallIntegerField(default=0, choices=((0, '本校'),(1, '所有学校')), verbose_name='是否所有学校可见')
     is_show = models.SmallIntegerField(default=0, choices=((0, '未删除'),(1, '已经删除')), verbose_name='是否取消')
-    status = models.SmallIntegerField(default=0, choices=((0, '未接单'), (1, '已接单'), (2, '交易完成 ')), verbose_name='交易状态')
+    status = models.SmallIntegerField(default=0, choices=((0, '未接单'), (1, '已接'), (2, '交易完成 ')), verbose_name='交易状态')
     finish_datetime = models.DateTimeField(auto_now=True, verbose_name="完成时间")
 
     school = models.ForeignKey('user.School', verbose_name='学校', on_delete=models.CASCADE, null=True)
@@ -28,7 +28,6 @@ class Help(models.Model):
 
 # 接单表
 class HelpOrder(models.Model):
-
     order_date = models.DateField(auto_now_add=True, verbose_name="接单日期")
     order_time = models.TimeField(auto_now_add=True, verbose_name="接单时间")
     is_you = models.SmallIntegerField(default=0, choices=((0, '是你'),(1, '不是你')), verbose_name='是不是你去完成')

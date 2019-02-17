@@ -59,7 +59,6 @@ class SecondImg(models.Model):
         verbose_name_plural = verbose_name
 
 
-
 # 评论表
 class SecondComment(models.Model):
     show_choices = (
@@ -99,5 +98,18 @@ class SecondReplyComment(models.Model):
     class Meta:
         db_table = 'dn_second_comment_reply'
         verbose_name = "校园二手·评论回复"
+        verbose_name_plural = verbose_name
+
+
+# 举报表
+class SecondReport(models.Model):
+    publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
+
+    second = models.ForeignKey('second',verbose_name='二手id',on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey('user.User', verbose_name='用户id', on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        db_table = 'dn_second_report'
+        verbose_name = "校园二手·举报"
         verbose_name_plural = verbose_name
 

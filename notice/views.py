@@ -7,8 +7,11 @@ from .models import Notice
 def notice_list(request):
     if request.method == 'GET':
         school_id = request.GET.get('school_id')
+        skip = int(request.GET.get('skip'))
+        end_skip = skip + 10
+
         # 按sort_num排序
-        notice = Notice.objects.filter(school=school_id,is_show=0).values('id','title','publish_date').order_by('sort_num')
+        notice = Notice.objects.filter(school=school_id,is_show=0).values('id','title','publish_date').order_by('sort_num')[skip:end_skip]
         data = {}
         data['code'] = 200
         data['notice_data'] = list(notice)

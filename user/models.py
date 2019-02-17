@@ -47,13 +47,21 @@ class User(models.Model):
     stu_num = models.CharField(max_length=30,verbose_name='学号',default="")
     stu_password = models.CharField(max_length=30,verbose_name='学号密码',default="")
 
+    reg_ip = models.CharField(max_length=30, default='', verbose_name='注册IP')
     token = models.CharField(max_length=100,verbose_name='身份令牌',default="")
-    device_num = models.CharField(max_length=100,verbose_name='设备唯一标识',default="")
-    device_model = models.CharField(max_length=100,verbose_name='设备型号',default="")
-    device_name = models.CharField(max_length=100,verbose_name='设备名称',default="")
-    operator = models.CharField(max_length=100,verbose_name='设备运营商名称',default="")
+    device_num = models.CharField(max_length=50,verbose_name='设备唯一标识',default="")
+    device_model = models.CharField(max_length=50,verbose_name='设备型号',default="")
+    device_name = models.CharField(max_length=30,verbose_name='设备名称',default="")
+    operator = models.CharField(max_length=30,verbose_name='设备运营商名称',default="")
+    system_type = models.CharField(max_length=30,verbose_name='手机系统类型',default="")
+    channel = models.CharField(max_length=50, verbose_name='下载渠道来源', default="")
     create_date = models.DateTimeField(default=datetime.now, verbose_name="注册时间")
     integral = models.IntegerField(verbose_name='积分',default=0)
+
+    good_total = models.IntegerField(verbose_name="获喜欢总数", default=0)
+    comment_total = models.IntegerField(verbose_name="获评论总数", default=0)
+    fans_total = models.IntegerField(verbose_name="获粉丝总数", default=0)
+    create_total = models.IntegerField(verbose_name="获关注总数", default=0)
 
     is_delete = models.SmallIntegerField(default=0, choices=delete_choices, verbose_name='销户')
     is_school_auth = models.SmallIntegerField(default=0, choices=school_auth_choices, verbose_name='学生认证')
@@ -63,7 +71,7 @@ class User(models.Model):
 
     class Meta:
         db_table = 'dn_user'
-        verbose_name = "用户账号资料"
+        verbose_name = "用户·账号资料"
         verbose_name_plural = verbose_name
 
     def __str__(self):
@@ -105,7 +113,7 @@ class Follow(models.Model):
 
     class Meta:
         db_table = 'dn_user_follow'
-        verbose_name = "用户关注"
+        verbose_name = "用户·关注"
         verbose_name_plural = verbose_name
 
 
@@ -125,7 +133,7 @@ class FunctionModule(models.Model):
 class AboutWe(models.Model):
     title = models.CharField(max_length=50, verbose_name="关于我们标题", default="")
     content = HTMLField(verbose_name="关于我们内容")
-    create_date = models.DateTimeField(auto_now_add=True, verbose_name="创建日期")
+    create_date = models.DateField(auto_now_add=True, verbose_name="创建日期")
 
     def __str__(self):
         return self.title
@@ -148,7 +156,6 @@ class AboutWeComment(models.Model):
     is_delete = models.SmallIntegerField(default=0, choices=delete_choices, verbose_name='是否显示')
 
     user = models.ForeignKey('user',verbose_name='用户',on_delete=models.CASCADE,null=True)
-    about_we = models.ForeignKey('AboutWe',verbose_name='关于我们',on_delete=models.CASCADE,null=True)
 
     class Meta:
         db_table = 'dn_user_about_comment'
@@ -172,7 +179,99 @@ class RecoveryPerson(models.Model):
 
     class Meta:
         db_table = 'dn_user_recovery_worker'
-        verbose_name = "工作人员·回收"
+        verbose_name = "用户·回收人员"
         verbose_name_plural = verbose_name
 
+
+
+# 登录表
+class Login(models.Model):
+    phone_num = models.CharField(max_length=15, verbose_name="手机号", default="")
+    password = models.CharField(max_length=50, verbose_name='密码', default="")
+    log_ip = models.CharField(max_length=30,  verbose_name='登录IP', default="")
+    device_num = models.CharField(max_length=50, verbose_name='设备唯一标识', default="")
+    device_model = models.CharField(max_length=50, verbose_name='设备型号', default="")
+    device_name = models.CharField(max_length=50, verbose_name='设备名称', default="")
+    operator = models.CharField(max_length=50, verbose_name='设备运营商名称', default="")
+    system_type = models.CharField(max_length=30, verbose_name='手机系统类型', default="")
+    system_version = models.CharField(max_length=30, verbose_name='手机平台系统版本', default="")
+    connection_type = models.CharField(max_length=30, verbose_name='网络连接类型', default="")
+    screen_width = models.CharField(max_length=30, verbose_name='屏幕分辨率宽', default="")
+    screen_height = models.CharField(max_length=30, verbose_name='屏幕分辨率高', default="")
+    channel = models.CharField(max_length=50, verbose_name='下载渠道来源', default="")
+    jail_break = models.CharField(max_length=10, verbose_name='设备是否越狱', default="")
+    create_datetime = models.DateTimeField(auto_now_add=True,verbose_name="创建日期")
+
+    user = models.ForeignKey('user', verbose_name='用户', on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        db_table = 'dn_user_login'
+        verbose_name = "用户·登录"
+        verbose_name_plural = verbose_name
+
+
+
+# 成绩表
+class Cj(models.Model):
+    daima = models.CharField(max_length=50, verbose_name='课程编码')
+    xueqi = models.CharField(max_length=50, verbose_name='学期')
+    name = models.CharField(max_length=50,verbose_name='课程名字')
+    number = models.CharField( max_length=20,verbose_name='分数')
+    is_pass = models.CharField(max_length=50,verbose_name='是否通过')
+    xuefen = models.CharField(max_length=50,verbose_name='学分')
+    leibie = models.CharField(max_length=50,verbose_name='课程类别')
+
+    user = models.ForeignKey('user', verbose_name='用户', on_delete=models.CASCADE, null=True)
+    school = models.ForeignKey('School', verbose_name='学校', on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        db_table = 'dn_user_score'
+        verbose_name = "用户·成绩"
+        verbose_name_plural = verbose_name
+
+# 课表
+class Kb(models.Model):
+    yi1 = models.CharField(max_length=100)
+    yi2 = models.CharField(max_length=100)
+    yi3 = models.CharField(max_length=100)
+    yi4 = models.CharField(max_length=100)
+    yi5 = models.CharField(max_length=100)
+    yi6 = models.CharField(max_length=100)
+    yi7 = models.CharField(max_length=100)
+    er1 = models.CharField(max_length=100)
+    er2 = models.CharField(max_length=100)
+    er3 = models.CharField(max_length=100)
+    er4 = models.CharField(max_length=100)
+    er5 = models.CharField(max_length=100)
+    er6 = models.CharField(max_length=100)
+    er7 = models.CharField(max_length=100)
+    san1 = models.CharField(max_length=100)
+    san2 = models.CharField(max_length=100)
+    san3 = models.CharField(max_length=100)
+    san4 = models.CharField(max_length=100)
+    san5 = models.CharField(max_length=100)
+    san6 = models.CharField(max_length=100)
+    san7 = models.CharField(max_length=100)
+    si1 = models.CharField(max_length=100)
+    si2 = models.CharField(max_length=100)
+    si3 = models.CharField(max_length=100)
+    si4 = models.CharField(max_length=100)
+    si5 = models.CharField(max_length=100)
+    si6 = models.CharField(max_length=100)
+    si7 = models.CharField(max_length=100)
+    wu1 = models.CharField(max_length=100)
+    wu2 = models.CharField(max_length=100)
+    wu3 = models.CharField(max_length=100)
+    wu4 = models.CharField(max_length=100)
+    wu5 = models.CharField(max_length=100)
+    wu6 = models.CharField(max_length=100)
+    wu7 = models.CharField(max_length=100)
+
+    user = models.ForeignKey('user', verbose_name='用户', on_delete=models.CASCADE, null=True)
+    school = models.ForeignKey('School', verbose_name='学校', on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        db_table = 'dn_user_class'
+        verbose_name = "用户·课表"
+        verbose_name_plural = verbose_name
 

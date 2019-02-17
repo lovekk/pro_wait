@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from user.models import User, School, Follow, FunctionModule,RecoveryPerson,AboutWe,AboutWeComment
+from user.models import User, School, Follow, FunctionModule,RecoveryPerson,AboutWe,AboutWeComment,Login
 
 # Register your models here.
 
@@ -10,8 +10,9 @@ class UserAdmin(admin.ModelAdmin):
 
     # 显示的字段
     list_display = ['id','phone_num','password','nick','gender','school_name','my_sign','real_name','account_num',
-                    'integral','create_date','is_school_auth','is_real_name_auth','device_num','device_model','device_name',
-                    'operator','head_image','head_qn_url','token']
+                    'integral','is_real_name_auth','is_school_auth','stu_num','stu_password','reg_ip','channel',
+                    'system_type','device_num','device_model','device_name','operator','create_date','good_total',
+                    'comment_total','fans_total','create_total','head_image','head_qn_url','token']
 
     # 每页显示条数
     list_per_page = 10
@@ -125,7 +126,7 @@ class AboutWeAdmin(admin.ModelAdmin):
 @admin.register(AboutWeComment)
 class AboutWeCommentAdmin(admin.ModelAdmin):
     # 显示的字段
-    list_display = ['id', 'comment', 'create_date', 'create_time']
+    list_display = ['id', 'comment', 'create_date', 'create_time','is_delete','user']
 
     # 每页显示条数
     list_per_page = 50
@@ -138,3 +139,22 @@ class AboutWeCommentAdmin(admin.ModelAdmin):
 
     # 设置哪些字段可以点击进入编辑界面
     list_display_links = ['id', 'comment']
+
+
+# 登录
+@admin.register(Login)
+class LoginAdmin(admin.ModelAdmin):
+    list_display = ['id', 'phone_num', 'password', 'log_ip','device_num','device_model','device_name','operator','channel',
+                    'system_type','system_version','connection_type','screen_width','screen_height','jail_break','user']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+    # 列表上方搜索框
+    search_fields = ['phone_num']
+
+    # 设置哪些字段可以点击进入编辑界面
+    list_display_links = ['id', 'phone_num']

@@ -9,7 +9,9 @@ from user.models import User
 def activity_list(request):
     if request.method == 'GET':
         school_id = request.GET.get('school_id')
+        skip = int(request.GET.get('skip'))
         if school_id:
+            end_skip = skip + 10
             activities = Activity.objects.filter(school=school_id, is_show=1).values(
                 'id',
                 'title',
@@ -18,7 +20,7 @@ def activity_list(request):
                 'publish_date',
                 'host_unit',
                 join_nums=Count('activitycomment')
-            )
+            ).order_by('-id')[skip:end_skip]
 
             data = {}
             data['code']=200
@@ -34,6 +36,8 @@ def activity_list(request):
 def activity_detail(request):
     if request.method == 'GET':
         activity_id = request.GET.get('activity_id')
+        skip = int(request.GET.get('skip'))
+        end_skip = skip + 20  # 评论 分页
         if activity_id:
 
             # 浏览 +1
@@ -50,7 +54,7 @@ def activity_detail(request):
                 'comment_date',
                 c_nick = F('commentator__nick'),
                 c_head = F('commentator__head_image')
-            ).order_by('-id')
+            ).order_by('-id')[skip:end_skip]
 
             data = {}
             data['code'] = 200

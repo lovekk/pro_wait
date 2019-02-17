@@ -49,9 +49,15 @@ class Culture(models.Model):
 
 # 校园文化评论
 class CultureComment(models.Model):
+    show_choices = (
+        (0, '显示'),
+        (1, '不显示'),
+    )
     comment_date = models.DateTimeField(auto_now_add=True, verbose_name="评论时间")
     create_date = models.DateField(auto_now_add=True, verbose_name="创建日期")
     content = models.CharField(max_length=100,verbose_name="评论内容",default="")
+    is_show = models.SmallIntegerField(default=0, choices=show_choices, verbose_name='是否显示')
+
     commentator = models.ForeignKey('user.User',verbose_name='评论者',on_delete=models.CASCADE,null=True)
     culture = models.ForeignKey('Culture', verbose_name='校园文化', on_delete=models.CASCADE, null=True)
 

@@ -15,15 +15,18 @@ import copy
 class HelpListView(View):
     def get(self, request):
         school_id = request.GET.get('school_id')
+        skip = int(request.GET.get('skip')) # 分页
+        end_skip = skip + 10
+
         if school_id:
             # 一对多 反查外键
             # 先查询 所有id
-            myhelp = Help.objects.filter(school=school_id).values('id').order_by('-id')
+            myhelp = Help.objects.filter(school=school_id).values('id').order_by('-id')[skip:end_skip]
+            print(myhelp)
 
             data = {}
             for_one = {}  # 单次数据
             all_list = []  # 总数据
-
             # 遍历id
             for item in list(myhelp):
                 # print(item.get('id'))  # {'id': 43}
@@ -34,16 +37,13 @@ class HelpListView(View):
                     u_nick=F('user__nick'), u_img=F('user__head_qn_url'), u_id=F('user__id'))
 
                 for_text = list(for_t)
-
                 # 查发布图片
                 for_img = list(HelpImage.objects.filter(myhelp=item_id).values('id', 'qiniu_img', 'myhelp'))
 
                 for_one['id'] = item_id
                 for_one['for_text'] = for_text
                 for_one['for_img'] = for_img
-
                 all_list.append(copy.deepcopy(for_one))
-                print(for_one)
 
             data['code'] = 200
             data['all_list'] = all_list
@@ -54,6 +54,7 @@ class HelpListView(View):
 
 
 # 添加help
+# ========================学生认证版============================
 class HelpAddView(View):
     def post(self,request):
 
@@ -71,12 +72,6 @@ class HelpAddView(View):
                 is_all_school = request.POST.get('is_all_school')
 
                 img_list = request.FILES.getlist('img_list')
-
-                print('====================================================')
-                print(content)
-                print(price)
-                print(is_online)
-                print(is_all_school)
 
                 school = School.objects.get(id=school_id)
                 # 判断积分是否比价格大
@@ -103,14 +98,74 @@ class HelpAddView(View):
                         HelpImage.objects.filter(id=myhelp_img_id).update(qiniu_img=qi_local_img)  # 更新七牛数据
 
                 return JsonResponse({'code': 200})
-
             else:
                 return JsonResponse({'errmsg': '该学生未认证，不能发布'})
         else:
             return JsonResponse({'errmsg': '尚未选择学校或该用户不存在'})
 
 
+# 添加help
+# ========================注册用户即可发布  暂时用这个添加help============================
+class AddHelpView(View):
+    def post(self,request):
+        school_id = request.POST.get('school_id')
+        user_id = request.POST.get('user_id')
+
+        if school_id and user_id:
+            content = request.POST.get('content')
+            price = int(request.POST.get('price'))
+            is_online = request.POST.get('is_type')
+            is_all_school = request.POST.get('is_all_school')
+            img_list = request.FILES.getlist('img_list')
+
+            user = User.objects.get(id=user_id)
+            school = School.objects.get(id=school_id)
+            # 保存数据
+            help_create = Help.objects.create(content=content,price=price,is_online=is_online,
+                                                      is_all_school=is_all_school,user=user,school=school)
+            if help_create:
+                for img in img_list:
+                    # 先保存到本地 不保存七牛 因为直接用七牛的put_data提示报错 期望不是InMemoryUploadedFile类型
+                    # 不怕图片名称重复 django处理了
+                    save_img = HelpImage.objects.create(local_img=img, myhelp=help_create)
+
+                    # 下面做七牛保存
+                    myhelp_local_img = str(MEDIA_ROOT) + '/' + str(save_img.local_img)  # 拼接本地绝对路径
+                    myhelp_img_id = save_img.id  # 获取当前本地图片的id
+                    qi_local_img = qi_local_upload(myhelp_local_img)  # 七牛上传
+                    HelpImage.objects.filter(id=myhelp_img_id).update(qiniu_img=qi_local_img)  # 更新七牛数据
+
+                return JsonResponse({'code': 200})
+            else:
+                return JsonResponse({'errmsg': '未能保存图片'})
+        else:
+            return JsonResponse({'errmsg': '尚未选择学校或该用户不存在'})
+
+
 # 接单
+class ToHelpView(View):
+    def post(self,request):
+        # 接收参数
+        helper_id = request.POST.get('helper_id')
+        help_id = request.POST.get('help_id')
+        # 都存在
+        if helper_id and help_id:
+            # 将订单状态改成已接单
+            help_ins = Help.objects.get(id=help_id)
+            if help_ins.status == 0:
+                helper_ins = User.objects.get(id=helper_id)
+                save_help = Help.objects.filter(id=help_id).update(status=1)
+                # 创建接单信息
+                order_create = HelpOrder.objects.create(user=helper_ins, myhelp=help_ins)
+                if order_create:
+                    return JsonResponse({'code': 200})
+            else:
+                return JsonResponse({'errmsg': '对不起，此单已被接！'})
+        else:
+            return JsonResponse({'errmsg':'对不起，参数出现错误！'})
+
+
+# 接单，这是认证版本，不用
 class HelpOrderView(View):
     def post(self,request):
         # 接收参数
@@ -136,7 +191,7 @@ class HelpOrderView(View):
             return JsonResponse({'errmsg':'该用户不存在'})
 
 
-# 完成交易
+# 完成交易, 暂不用
 class HelpFinishView(View):
     def post(self,request):
         helper_id = request.POST.get('helper_id')
@@ -161,13 +216,13 @@ class HelpDetailView(View):
         help_id = request.GET.get('help_id')
         u_id = request.GET.get('u_id')
 
-        print(help_id)
         if help_id:
             # 浏览 +1
             look_this = Help.objects.get(id=help_id)
             view_num = look_this.view_num + 1
             Help.objects.filter(id=help_id).update(view_num=view_num)
             # ======================================Help详情================================
+
             # 查询 详情和评论
             myhelp = Help.objects.filter(id=help_id).values(
                 'id',
@@ -184,9 +239,20 @@ class HelpDetailView(View):
                 c_nick=F('user__nick'),
                 c_head=F('user__head_qn_url')
             )
-
             # 查发布图片
-            img = list(HelpImage.objects.filter(myhelp=help_id).values('id', 'qiniu_img', 'myhelp'))
+            img = HelpImage.objects.filter(myhelp=help_id).values('id', 'qiniu_img', 'myhelp')
+
+            # 接单者
+            if look_this.status == 1:
+                helper_obj = list(HelpOrder.objects.filter(myhelp=help_id).values(
+                    'order_date',
+                    'order_time',
+                    helper_id=F('user__id'),
+                    helper_nick=F('user__nick'),
+                    helper_head=F('user__head_qn_url')
+                ))
+            else:
+                helper_obj = ''
 
             # ======================================Help·评论================================
             # help id 用户id  ---->  用户昵称，用户头像, 评论id，评论内容,排序
@@ -219,10 +285,9 @@ class HelpDetailView(View):
 
             data['code'] = 200
             data['img'] = list(img)
-
+            data['helper'] = helper_obj
             data['myhelp_data'] = list(myhelp)
             data['comment_data'] = list(comment)
-
             return JsonResponse(data)
         else:
             return JsonResponse({'errmsg': '请求发生错误'})

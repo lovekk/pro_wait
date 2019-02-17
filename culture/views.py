@@ -9,6 +9,8 @@ from user.models import User
 def culture_content(request):
     if request.method == 'GET':
         school_id = request.GET.get('school_id')
+        skip = int(request.GET.get('skip'))
+        end_skip = skip + 20
 
         if school_id:
             # 浏览 +1
@@ -20,12 +22,12 @@ def culture_content(request):
             culture = Culture.objects.filter(school=school_id).values().order_by('-id')[0:1]
             # 学校id 用户id  ---->  用户昵称，用户头像, 评论id，评论内容
             culture_title = look_this.title
-            comment = CultureComment.objects.filter(culture__title=culture_title).values(
+            comment = CultureComment.objects.filter(culture__title=culture_title,is_show=0).values(
                 'content',
                 'create_date',
                 u_nick=F('commentator__nick'),
                 u_img=F('commentator__head_qn_url'),
-            ).order_by('-id')[0:100]
+            ).order_by('-id')[skip:end_skip]
 
             data = {}
             data['code'] = 200

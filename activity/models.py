@@ -9,8 +9,8 @@ class ActivityComment(models.Model):
         (0, '显示'),
         (1, '已删除'),
     )
-    comment_datetime = models.DateTimeField(default=datetime.now, verbose_name="评论时间")
     comment_date = models.DateField(auto_now_add=True, verbose_name="创建日期")
+    comment_time = models.TimeField(auto_now_add=True, verbose_name="创建时间")
     content = models.CharField(max_length=100,verbose_name="评论内容",default="")
     is_show = models.SmallIntegerField(default=0, choices=show_choices, verbose_name='是否显示')
 

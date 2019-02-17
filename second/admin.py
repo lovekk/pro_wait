@@ -1,5 +1,5 @@
 from django.contrib import admin
-from second.models import Second,SecondImg,SecondComment,SecondReplyComment
+from second.models import Second,SecondImg,SecondComment,SecondReplyComment,SecondReport
 
 
 @admin.register(Second)
@@ -31,7 +31,7 @@ class SecondImgAdmin(admin.ModelAdmin):
     list_display = ['id','qiniu_img','local_img','second','create_datetime']
 
     # 每页显示条数
-    list_per_page = 50
+    list_per_page = 100
 
     # id 排序
     ordering = ['-id']
@@ -44,7 +44,7 @@ class SecondCommentAdmin(admin.ModelAdmin):
     list_display = ['id', 'content','comment_date', 'comment_time', 'is_show', 'replay_num', 'user', 'second']
 
     # 每页显示条数
-    list_per_page = 50
+    list_per_page = 100
 
     # id 排序
     ordering = ['-id']
@@ -64,7 +64,7 @@ class SecondReplyCommentAdmin(admin.ModelAdmin):
     list_display = ['id', 'content', 'comment_date', 'comment_time', 'user', 'second', 'comment', 'parent']
 
     # 每页显示条数
-    list_per_page = 50
+    list_per_page = 100
 
     # id 排序
     ordering = ['-id']
@@ -74,3 +74,16 @@ class SecondReplyCommentAdmin(admin.ModelAdmin):
 
     search_fields = ['content']  # 搜索字段 标题等文本字段用搜索框
     # date_hierarchy = 'publish_date'  # 详细时间分层筛选　日期时间用分层筛选
+
+
+@admin.register(SecondReport)
+class SecondReportAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'second', 'user', 'publish_datetime']
+
+    # 每页显示条数
+    list_per_page = 100
+
+    # id 排序
+    ordering = ['-id']
+

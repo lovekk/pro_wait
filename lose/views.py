@@ -18,12 +18,13 @@ from pro_wait.settings import MEDIA_ROOT
 # 失物招领 列表  现在使用的是这种写法
 @require_GET
 def lose_list(request):
-
     school_id = request.GET.get('school_id')
+    skip = int(request.GET.get('skip'))
     if school_id:
         # 一对多 反查外键
         # 先查询 所有id
-        loses_first = Lose.objects.filter(school=school_id,is_show=0).values('id').order_by('-id')
+        end_skip = skip + 10
+        loses_first = Lose.objects.filter(school=school_id,is_show=0).values('id').order_by('-id')[skip:end_skip]
 
         data = {}
         for_all = {}   # 单次数据
@@ -57,7 +58,7 @@ def lose_list(request):
         return JsonResponse({'errmsg': '尚未选择学校'})
 
 
-# 失物招领 列表 这种写法不如上面的好些
+# 失物招领 列表 这种写法不如上面的好些,使用的上面的写法
 class IndexView(View):
     def get(self, request):
         school_id = request.GET.get('school_id')
@@ -133,7 +134,6 @@ def lose_add(request):
 class LoseDetailView(View):
     def get(self, request):
         lose_id = request.GET.get('lose_id')
-        user_id = request.GET.get('user_id')
 
         if lose_id:
             # 浏览 +1
@@ -183,8 +183,8 @@ class LoseDetailView(View):
                 item['replycomment'] = list(one_replay)
 
             data['code'] = 200
-            data['img'] = list(img)
             data['lose_data'] = list(lose)
+            data['img'] = list(img)
             data['comment_data'] = list(comment)
 
             return JsonResponse(data)

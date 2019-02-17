@@ -151,8 +151,7 @@ class Introduce(View):
         return JsonResponse(data)
 
 
-# 新的APP  官方回收人员专用
-
+# ===========================================新的APP  官方回收人员专用=============================================
 # 0.找袋子的预约信息
 class FindBagView(View):
     def get(self,request):
@@ -247,22 +246,48 @@ class WeighView(View):
             return JsonResponse({'errmsg':'该回收袋/预约不存在'})
 
 
-# 2.绑袋子的订单
+# 2.0 预约的订单
+class PreOrderListView(View):
+    def get(self,request):
+        school_id = request.GET.get('school_id')
+        if school_id:
+            # 已经绑袋子的信息
+            order_list = Appoint.objects.filter(school=school_id,status=0).values(
+                'thing_type',
+                'address',
+                'phone_num',
+                'remark',
+                'create_date',
+                u_phone=F('user__phone_num'),
+                u_nick=F('user__nick'),
+            ).order_by('-id')
+            data = {}
+            data['code'] = 200
+            data['order_list'] = list(order_list)
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'errmsg': '未选择学校'})
+
+
+# 2.1 绑袋子的订单
 class OrderListView(View):
     def get(self,request):
         school_id = request.GET.get('school_id')
         if school_id:
             # 已经绑袋子的信息
-            Appoint.objects.filter(school=school_id,status=1).values(
+            order_list = Appoint.objects.filter(school=school_id,status=1).values(
                 'thing_type',
                 'address',
                 'phone_num',
                 'bag_num',
                 'remark',
-                u_phone=F('user__phone_num'),
+                'create_date',
                 u_nick=F('user__nick'),
-                u_img=F('user__head_image')
             ).order_by('-id')
+            data = {}
+            data['code'] = 200
+            data['order_list'] = list(order_list)
+            return JsonResponse(data)
         else:
             return JsonResponse({'errmsg': '未选择学校'})
 
@@ -277,10 +302,9 @@ class HistoryListView(View):
                 'thing_type',
                 'weight',
                 'money',
-                'weight',
                 'bag_num',
-                'worker_num',
                 'update_datetime',
+                'worker_num',
                 u_nick=F('user__nick')
             ).order_by('-id')
             data = {}

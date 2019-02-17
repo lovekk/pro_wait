@@ -14,7 +14,7 @@ class AppointAdmin(admin.ModelAdmin):
     list_per_page = 50
 
     # id 正序
-    ordering = ['id']
+    ordering = ['-id']
 
     # 设置哪些字段可以点击进入编辑界面
     list_display_links = ['id', 'thing_type']
@@ -32,10 +32,10 @@ class MyRankAdmin(admin.ModelAdmin):
     list_display = ['id','times','money','user','school','create_datetime']
 
     # 每页显示条数
-    list_per_page = 50
+    list_per_page = 100
 
     # id 正序
-    ordering = ['id']
+    ordering = ['money']
 
 
 # 回收价格
@@ -46,7 +46,7 @@ class PriceAdmin(admin.ModelAdmin):
     list_display = ['id','name','unit','price','create_datetime']
 
     # 每页显示条数
-    list_per_page = 10
+    list_per_page = 20
 
     # id 正序
     ordering = ['id']
@@ -60,14 +60,20 @@ class BagAdmin(admin.ModelAdmin):
     list_display = ['id','number','create_datetime']
 
     # 每页显示条数
-    list_per_page = 50
+    list_per_page = 100
 
     # id 正序
-    ordering = ['id']
+    ordering = ['-id']
+
+    # 设置哪些字段可以点击进入编辑界面
+    list_display_links = ['id', 'number']
+
+    # 筛选器
+    search_fields = ['number']  # 搜索字段 标题等文本字段用搜索框
 
 
 
-# 分类回收介绍
+# 环保知识分类回收介绍
 @admin.register(Introduction)
 class IntroductionAdmin(admin.ModelAdmin):
 
@@ -75,13 +81,13 @@ class IntroductionAdmin(admin.ModelAdmin):
     list_display = ['id','content','create_datetime','update_datetime']
 
     # 每页显示条数
-    list_per_page = 10
+    list_per_page = 20
 
     # id 正序
     ordering = ['id']
 
 
-# 环保知识
+# 每个学校的提示
 @admin.register(Tips)
 class TipsAdmin(admin.ModelAdmin):
 
@@ -89,7 +95,7 @@ class TipsAdmin(admin.ModelAdmin):
     list_display = ['id','school','tip','create_datetime','update_datetime']
 
     # 每页显示条数
-    list_per_page = 10
+    list_per_page = 20
 
     # id 正序
     ordering = ['id']

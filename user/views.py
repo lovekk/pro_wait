@@ -4,7 +4,7 @@ from django.db.models import Count, F,Sum
 from django.db import connection
 from django.views.generic import View
 
-from user.models import User, School, Follow, FunctionModule, AboutWe,AboutWeComment,RecoveryPerson
+from user.models import User, School, Follow, FunctionModule, AboutWe,AboutWeComment,RecoveryPerson, Login,Cj
 from myhelp.models import Help
 from activity.models import Activity
 from article.models import Article
@@ -14,7 +14,7 @@ from utils.getModule import getModule
 from utils.qiniu_upload import qi_local_upload, qi_upload
 from pro_wait.settings import MEDIA_ROOT
 
-import hashlib, copy
+import hashlib, copy,base64
 
 
 # 测试首页
@@ -35,6 +35,7 @@ def login(request):
         phone_num = request.POST.get('phone_num')
         password = request.POST.get('password')
 
+        # 加密密码
         password_md5 = hashlib.md5(password.encode(encoding='UTF-8')).hexdigest()
         obj = list(User.objects.filter(phone_num=phone_num).values('password'))
         if (obj):
@@ -84,6 +85,9 @@ def register_msg(request):
         device_model = request.POST.get('device_model')
         device_name = request.POST.get('device_name')
         operator = request.POST.get('operator')
+        reg_ip = request.POST.get('reg_ip')        # 注册IP
+        system_type = request.POST.get('system_type')        # 手机系统类型
+        channel = request.POST.get('channel')        # 下载渠道
 
         head_image = request.FILES.get('head_image')
         print(head_image)
@@ -122,7 +126,8 @@ def register_msg(request):
                 device_model=device_model,
                 device_name=device_name,
                 operator=operator,
-                head_image=head_image
+                head_image=head_image,
+                reg_ip=reg_ip
             )
             data = {}
             if user_create:
@@ -182,7 +187,7 @@ class FunctionModuleView(View):
             # id倒序前3个 首页轮播图就3张
             activity = Activity.objects.filter(school=school_id, is_first=1).values('id', 'big_img').order_by('-id')[0:3]
             # id倒序前5个 显示5篇
-            article = Article.objects.filter(school=school_id).values('id', 'title', 'view_num', 'list_img', 'author',
+            article = Article.objects.filter(is_show=1).values('id', 'title', 'view_num', 'list_img', 'author',
                                                                       'publish_date').order_by('-id')[0:5]
             data = {}
             data['code'] = 200
@@ -193,46 +198,7 @@ class FunctionModuleView(View):
         else:
             return JsonResponse({'errmsg':'未选择学校'})
 
-
-# ================================== 认证 =====================================================
-# 学生认证
-class SchoolAuth(View):
-    def post(self, request):
-        school_id = request.POST.get('school_id')
-        user_id = request.POST.get('user_id')
-        account = request.POST.get('account')
-        password = request.POST.get('password')
-        code = request.POST.get('code')
-        if account and password and code:
-            module = getModule(school_id)
-            real_name = module.login(account, password, code)
-            if real_name:
-                User.objects.filter(id=user_id).update(real_name=real_name,stu_num=account,stu_password=password,is_school_auth=1)
-            else:
-                return JsonResponse({"errmsg":"信息输入错误"})
-
-        # 如果教务系统没有验证码
-        elif code is None and account and password:
-            module = getModule(school_id)
-            if module.login(account, password):
-                User.objects.filter(id=user_id).update(stu_num=account, stu_password=password, is_school_auth=1)
-            else:
-                return JsonResponse({"errmsg": "信息输入错误"})
-        else:
-            return JsonResponse({"errmsg":"没接收到学号或者密码"})
-
-
-# 学生认证 返回验证码图片
-def getCodeImage(request):
-    if request.method == 'POST':
-        school_id = request.POST.get('school_id')
-        module = getModule(school_id)
-        code_img = module.getcode()
-        return JsonResponse({"code_img":"code_img"})
-
-
 # ================================================我的 关注 粉丝 积分 主页 修改个人信息================================
-
 # 我自己的个人主页
 class HomePage(View):
     def get(self,request):
@@ -242,18 +208,12 @@ class HomePage(View):
             moment_num = Moment.objects.filter(user=user_id).aggregate(Sum('good_num'),Sum('comment_num'))
             # 粉丝数
             fans_num = Follow.objects.filter(follow_id=user_id,is_delete=0).aggregate(Count('user'))
-            print(fans_num)
-            print(moment_num)
-
             # 个人信息
-            user = User.objects.filter(id=user_id).values('id', 'nick', 'head_qn_url','school_name','my_sign')
-
+            user = User.objects.filter(id=user_id).values('id', 'nick', 'head_qn_url','gender','school_name','my_sign')
             # 一对多 反查外键
             # 先查询 所有id
-
             moments_first = Moment.objects.filter(is_show=0,user=user_id).values('id').order_by('-id')
 
-            print(moments_first)
             data = {}
             for_one = {}  # 单次数据
             all_list = []  # 总数据
@@ -274,17 +234,13 @@ class HomePage(View):
                     'comment_num',u_nick=F('user__nick'), u_img=F('user__head_qn_url'), u_id=F('user__id'))
 
                 for_text = list(for_t)
-
                 # 查发布图片
                 for_img = list(Image.objects.filter(moment=item_id).values('id', 'qiniu_img', 'moment'))
-
                 # 查看 录音
                 for_voice = list(
                     Voice.objects.filter(moment=item_id).values('id', 'qiniu_voice', 'local_voice', 'voice_time','moment'))
-
                 # 查看 视频
                 for_video = list(Video.objects.filter(moment=item_id).values('id', 'qiniu_video', 'moment'))
-
                 # 是否点赞
                 for_good = Good.objects.filter(moment=item_id, user=user_id).exists()
 
@@ -294,10 +250,88 @@ class HomePage(View):
                 for_one['for_voice'] = for_voice
                 for_one['for_video'] = for_video
                 for_one['for_good'] = for_good
-
                 # 单个 追加
                 all_list.append(copy.deepcopy(for_one))
                 # print(for_one)
+
+            data['code'] = 200
+            data['fans_num'] = fans_num
+            data['moment_msg'] = moment_num
+            data['user_list'] = list(user)
+            data['all_list'] = all_list
+            return JsonResponse(data)
+        else:
+            return JsonResponse({"errmsg": "改用户不存在"})
+
+
+# ta的个人主页
+class HisHomePage(View):
+    def get(self,request):
+        user_id = request.GET.get('user_id')
+        my_id = request.GET.get('my_id')
+        skip = int(request.GET.get('skip'))  # 分页
+        if user_id:
+            end_skip = skip + 10
+            # 获赞数 评论数
+            moment_num = Moment.objects.filter(user=user_id).aggregate(Sum('good_num'),Sum('comment_num'))
+            # 粉丝数
+            fans_num = Follow.objects.filter(follow_id=user_id,is_delete=0).aggregate(Count('user'))
+            # 个人信息
+            user = User.objects.filter(id=user_id).values('id', 'nick', 'head_qn_url','gender','school_name','my_sign')
+            # 一对多 反查外键
+            # 先查询 所有id----匿名的不显示
+            moments_first = Moment.objects.filter(is_show=0, user=user_id).exclude(tag='匿名树洞').values('id').order_by('-id')[skip:end_skip]
+
+            data = {}
+            for_one = {}  # 单次数据
+            all_list = []  # 总数据
+
+            # 遍历id
+            for item in list(moments_first):
+                # print(item.get('id'))  # {'id': 43}
+                item_id = item.get('id')
+
+                # 浏览 +1
+                look_this = Moment.objects.get(id=item_id)
+                view_num = look_this.view_num + 1
+                Moment.objects.filter(id=item_id).update(view_num=view_num)
+
+                # 查发布内容
+                for_t = Moment.objects.filter(id=item_id).values(
+                    'id', 'content', 'good_num', 'publish_date', 'publish_time', 'tag', 'comment_num', 'view_num',
+                    'comment_num',u_nick=F('user__nick'), u_img=F('user__head_qn_url'), u_id=F('user__id'))
+
+                for_text = list(for_t)
+                # 查发布图片
+                for_img = list(Image.objects.filter(moment=item_id).values('id', 'qiniu_img', 'moment'))
+                # 查看 录音
+                for_voice = list(
+                    Voice.objects.filter(moment=item_id).values('id', 'qiniu_voice', 'local_voice', 'voice_time','moment'))
+                # 查看 视频
+                for_video = list(Video.objects.filter(moment=item_id).values('id', 'qiniu_video', 'moment'))
+                # 是否点赞
+                for_good = Good.objects.filter(moment=item_id, user=user_id).exists()
+
+                for_one['id'] = item_id
+                for_one['for_text'] = for_text
+                for_one['for_img'] = for_img
+                for_one['for_voice'] = for_voice
+                for_one['for_video'] = for_video
+                for_one['for_good'] = for_good
+                # 单个 追加
+                all_list.append(copy.deepcopy(for_one))
+                # print(for_one)
+
+            # 查看是否关注
+            if user_id == my_id:
+                data['follow'] = 2
+            else:
+                is_follow = Follow.objects.filter(follow_id=user_id, user=my_id, is_delete=0).exists()
+                if is_follow:
+                    # 已经关注了
+                    data['follow'] = 1
+                else:
+                    data['follow'] = 0  #没有关注
 
             data['code'] = 200
             data['fans_num'] = fans_num
@@ -417,21 +451,26 @@ class UpdateUserHeadView(View):
             return JsonResponse({'errmsg':'该用户不存在'})
 
 
+# ================================================关于我们================================
 # 关于我们
 class AboutWeView(View):
    def get(self,request):
-        aboutwe = AboutWe.objects.values('title','content')
-        comment = AboutWeComment.objects.filter(about_we=aboutwe).values(
+        skip = int(request.GET.get('skip'))  # 分页
+        end_skip = skip + 20
+
+        about_we = AboutWe.objects.values()
+        comment = AboutWeComment.objects.values(
             'comment',
             'create_date',
             nick = F('user__nick'),
-            u_img=F('user__head_image'),
+            u_img=F('user__head_qn_url'),
             u_id=F('user__id')
-        ).order_by('-id')
-        if aboutwe and comment :
+        ).order_by('-id')[skip:end_skip]
+
+        if about_we :
             data = {}
             data['code'] = 200
-            data['aboutwe_data'] = list(aboutwe)
+            data['about_we_data'] = list(about_we)
             data['comment_data'] = list(comment)
 
             return JsonResponse(data)
@@ -439,18 +478,15 @@ class AboutWeView(View):
             return JsonResponse({'errmsg':'请求发生错误'})
 
 
-# 添加评论
-class AddCommentView(View):
+# 关于我们 添加评论
+class AddAboutCommentView(View):
     def post(self,request):
-
-        aboutwe_id = request.POST.get('aboutwe_id')
         comment = request.POST.get('comment')
         commentator_id = request.POST.get('commentator_id')
 
-        if aboutwe_id and commentator_id:
+        if commentator_id:
             user = User.objects.get(id=commentator_id)
-            aboutwe = AboutWe.objects.get(id=aboutwe_id)
-            comment_creat = AboutWeComment.objects.create(comment=comment,user=user,about_we=aboutwe)
+            comment_creat = AboutWeComment.objects.create(comment=comment,user=user)
             if comment_creat:
                 return JsonResponse({'code':200})
             else:
@@ -459,7 +495,172 @@ class AddCommentView(View):
             return JsonResponse({'errmsg': '没有接收到数据'})
 
 
+#登录 保存登录信息
+class LoginView(View):
+    def post(self,request):
+        phone_num = request.POST.get('phone_num')  #电话号码
+        password = request.POST.get('password')    #密码
+        log_ip = request.POST.get('log_ip')        #登录IP
+        device_num = request.POST.get('device_num') #设备唯一标识
+        device_model = request.POST.get('device_model') #设备型号
+        device_name = request.POST.get('device_name')   #设备名称
+        operator = request.POST.get('operator')         #设备运营商名称
+        system_type = request.POST.get('system_type')         #手机系统类型
+        system_version = request.POST.get('system_version')         #手机平台系统版本
+        connection_type = request.POST.get('connection_type')         #网络连接类型
+        screen_width = request.POST.get('screen_width')         #屏幕分辨率宽
+        screen_height = request.POST.get('screen_height')         #屏幕分辨率高
+        channel = request.POST.get('channel')         #渠道
+        jail_break = request.POST.get('jail_break')         #设备是否越狱
+
+        # 只做简单的保存
+        user = User.objects.get(phone_num=phone_num)
+
+        save_login = Login.objects.create(phone_num=phone_num, password=password, log_ip=log_ip,device_model=device_model,
+                                          device_num=device_num, device_name=device_name,operator=operator,
+                                          system_type=system_type,system_version=system_version,connection_type=connection_type,
+                                          screen_width=screen_width,screen_height=screen_height,jail_break=jail_break,user=user)
+        if save_login :
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'errmsg':'未接收到数据！'})
+
+# 忘记密码
+class ForgetPwd(View):
+    def post(self,request):
+        # user_id = request.POST.get('user_id')
+        phone_num = request.POST.get('phone_num')  # 手机号
+        password = request.POST.get('password')  # 新密码
+        re_password = request.POST.get('password') # 确认新密码
+
+        if phone_num and password and re_password:
+            is_have = User.objects.filter(phone_num=phone_num).exists()
+            if is_have:
+                if password == re_password:
+                    User.objects.filter(phone_num=phone_num).update(password=password)
+                else:
+                    return JsonResponse({'errmsg':'两次密码输入不一致！'})
+            else:
+                return JsonResponse({'errmsg':'手机号未注册！'})
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'errmsg':'未接收到数据！'})
 
 
+# 修改密码
+class ChangePwd(View):
+    def post(self,request):
+        user_id = request.POST.get('user_id')
+        init_pwd = request.POST.get('old_pwd')  #初始密码
+        new_pwd = request.POST.get('new_pwd')  # 新密码
+        confirm_pwd = request.POST.get('confirm_pwd') # 确认新密码
+
+        # 加密
+        init_pwd_md5 = hashlib.md5(init_pwd.encode(encoding='UTF-8')).hexdigest()
+        new_pwd_md5 = hashlib.md5(new_pwd.encode(encoding='UTF-8')).hexdigest()
+
+        # 判断密码情况
+        if user_id and init_pwd and new_pwd and confirm_pwd:
+            # 获取到当前对象
+            user_pwd = User.objects.get(id=user_id)
+            if init_pwd_md5 == user_pwd.password:
+                if new_pwd == confirm_pwd:
+                    # 更新密码
+                    User.objects.filter(id=user_id).update(password=new_pwd_md5)
+                    return JsonResponse({'code': 200})
+                else:
+                    return JsonResponse({'errmsg': '两次密码输入不一致'})
+            else:
+                # 初始密码不正确
+                return JsonResponse({'code': 400})
+        else:
+            return JsonResponse({'errmsg':'未接收到参数'})
 
 
+#  保存成绩、学生认证、查询成绩 2019/1/23
+class SchoolAuth(View):
+    def post(self, request):
+        school_id = request.POST.get('school_id')
+        user_id = request.POST.get('user_id')
+        account = request.POST.get('account')  # 学号
+        password = request.POST.get('password')
+        code = request.POST.get('code')  # 验证码
+
+        data = {}
+
+        if account and password and code:
+            # 获取不同学校里的方法
+            module = getModule(school_id)
+            real_name = module.login(account, password, code)
+
+            # 这不是第一次
+            if User.objects.filter(id=user_id, real_name=real_name).exists():
+                # 调用保存成绩的方法
+                module.getCj(user_id, school_id)
+                # 查询成绩
+                cj = Cj.objects.filter(user=user_id, school=school_id).values()
+                if cj:
+                    data['code'] = 200
+                    data['cj'] = list(cj)
+                    return JsonResponse(data)
+                else:
+                    return JsonResponse({"errmsg": "没查询到成绩"})
+
+            # 第一次 更新用户信息
+            else:
+                # 保存真实姓名到数据库，完成实名验证
+                User.objects.filter(id=user_id).update(real_name=real_name, stu_num=account, stu_password=password,
+                                                       is_school_auth=1)
+                # 调用保存成绩的方法
+                module.getCj(user_id, school_id)
+                # 查询成绩
+                cj = Cj.objects.filter(user=user_id).values()
+                if cj:
+                    data['code'] = 200
+                    data['cj'] = list(cj)
+                    return JsonResponse(data)
+                else:
+                    return JsonResponse({"errmsg": "没查询到成绩"})
+
+        # 如果教务系统没有验证码
+        elif code is None and account and password:
+            module = getModule(school_id)
+            real_name = module.login(account, password)
+            if User.objects.filter(id=user_id, real_name=real_name).exists():
+                # 调用保存成绩的方法
+                module.getCj(user_id, school_id)
+                # 查询成绩
+                cj = Cj.objects.filter(user=user_id, school=school_id).values()
+                if cj:
+                    data['code'] = 200
+                    data['cj'] = list(cj)
+                    return JsonResponse(data)
+                else:
+                    return JsonResponse({"errmsg": "没查询到成绩"})
+            else:
+                # 保存真实姓名到数据库，完成实名验证
+                User.objects.filter(id=user_id).update(real_name=real_name, stu_num=account, stu_password=password,
+                                                       is_school_auth=1)
+                # 调用保存成绩的方法
+                module.getCj(user_id, school_id)
+                # 查询成绩
+                cj = Cj.objects.filter(user=user_id, school=school_id).values()
+                if cj:
+                    data['code'] = 200
+                    data['cj'] = list(cj)
+                    return JsonResponse(data)
+                else:
+                    return JsonResponse({"errmsg": "没查询到成绩"})
+
+        else:
+            return JsonResponse({"errmsg": "没接收到学号或者密码"})
+
+
+# 返回验证码图片
+def getCodeImage(request):
+    if request.method == 'GET':
+        school_id = request.GET.get('school_id')
+        module = getModule(school_id)
+        code_img = module.getcode()
+        print(code_img)
+        return JsonResponse({"code_img": str(code_img)})

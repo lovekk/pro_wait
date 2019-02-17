@@ -7,7 +7,7 @@ from django.db.models import Count, F
 from utils.qiniu_upload import qi_local_upload
 from pro_wait.settings import MEDIA_ROOT
 
-from second.models import Second, SecondImg, SecondComment, SecondReplyComment
+from second.models import Second, SecondImg, SecondComment, SecondReplyComment, SecondReport
 from user.models import User, School
 
 import copy
@@ -32,12 +32,12 @@ def second_add(request):
 class IndexView(View):
     def get(self, request):
         school_id = request.GET.get('school_id')
+        skip = int(request.GET.get('skip'))
         if school_id:
             # 一对多 反查外键
             # 先查询 所有id
-            seconds_list = Second.objects.filter(school=school_id, is_first=0).values('id', 'content','price',
-                'good_num', 'create_date', 'create_time', 'is_type', u_nick=F('creator__nick'),
-                u_img=F('creator__head_qn_url'), u_id=F('creator__id'), u_token=F('creator__token')).order_by('-id')
+            end_skip = skip + 10
+            seconds_list = Second.objects.filter(school=school_id, is_show=0).values('id').order_by('-id')[skip:end_skip]
 
             data = {}
             for_all = {}  # 单次数据
@@ -47,14 +47,25 @@ class IndexView(View):
             for item in list(seconds_list):
                 # print(item.get('id'))  # {'id': 43}
                 item_id = item.get('id')
+                # 查发布内容
+                for_t = Second.objects.filter(id=item_id).values(
+                    'id', 'content', 'good_num', 'create_date','create_time','price','is_type', 'view_num',
+                    u_nick=F('creator__nick'),u_img=F('creator__head_qn_url'),u_id=F('creator__id'), u_token=F('creator__token')
+                ).order_by('-id')
+
+                for_text = list(for_t)
                 # 查发布图片
-                for_all['for_img'] = list(SecondImg.objects.filter(second=item_id).values('id', 'qiniu_img', 'second'))
+                for_img = list(SecondImg.objects.filter(second=item_id).values('id', 'qiniu_img', 'second'))
+
+                for_all['id'] = item_id
+                for_all['for_text'] = for_text
+                for_all['for_img'] = for_img
+
                 all_list.append(copy.deepcopy(for_all))
                 # print(for_all)
 
             data['code'] = 200
-            data['text_list'] = list(seconds_list)
-            data['img_list'] = all_list
+            data['text_list'] = all_list
 
             return JsonResponse(data)
         else:
@@ -223,3 +234,24 @@ class ReplyCommentView(View):
             return JsonResponse({'code': 200})
         else:
             return JsonResponse({'errmsg': '数据没有保存成功！'})
+
+
+# 校园二手 举报
+class SecondReportView(View):
+    def get(self, request):
+        second_id = request.GET.get('second_id')
+        u_id = request.GET.get('u_id')
+
+        if second_id and u_id:
+            is_have = SecondReport.objects.filter(second=second_id,user=u_id).exists()
+            # 是否存在
+            if is_have :
+                return JsonResponse({'msg': '已经举报过了'})
+            else:
+                # 举报 入表
+                user_ins = User.objects.get(id=u_id)
+                second_ins = Second.objects.get(id=second_id)
+                SecondReport.objects.create(second=second_ins,user=user_ins)
+                return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'errmsg': '尚未选择学校'})

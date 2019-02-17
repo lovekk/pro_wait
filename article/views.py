@@ -10,11 +10,14 @@ def article_list(request):
 
     if request.method == 'GET':
         school_id = request.GET.get('school_id')
+        skip = int(request.GET.get('skip'))
+        end_skip = skip + 10  # 评论 分页
         if school_id :
-            articles = Article.objects.filter(school=school_id,is_show=1).values('id', 'title', 'author', 'view_num',
-                                                                                 'publish_date', 'list_img')
+            # articles = Article.objects.filter(school=school_id,is_show=1).values('id', 'title', 'author', 'view_num','publish_date', 'list_img')
+            articles = Article.objects.filter(is_show=1).values(
+                'id', 'title', 'author', 'view_num','publish_date', 'list_img').order_by('-id')[skip:end_skip]
             data = {}
-            data['code']=200
+            data['code'] = 200
             data['article_data'] = list(articles)
             return JsonResponse(data)
         else:
@@ -27,6 +30,8 @@ def article_list(request):
 def article_detail(request):
     if request.method == 'GET':
         article_id = request.GET.get('article_id')
+        skip = int(request.GET.get('skip'))
+        end_skip = skip + 20  # 评论 分页
         if article_id:
             # 浏览 +1
             look_this = Article.objects.get(id=article_id)
@@ -44,7 +49,7 @@ def article_detail(request):
                 'create_date',
                 c_nick=F('commentator__nick'),
                 c_head=F('commentator__head_qn_url')
-            ).order_by('-id')
+            ).order_by('-id')[skip:end_skip]
             # print(list(comment))
             data = {}
             data['code'] = 200

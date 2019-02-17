@@ -1,7 +1,7 @@
 from django.contrib import admin
 from myhelp.models import Help, HelpOrder, HelpImage, HelpReport, HelpComment, HelpReplyComment, HelpCommentImage
 
-# 发现
+# help
 @admin.register(Help)
 class HelpAdmin(admin.ModelAdmin):
 
@@ -29,7 +29,7 @@ class HelpAdmin(admin.ModelAdmin):
 class HelpOrderAdmin(admin.ModelAdmin):
 
     # 显示的字段
-    list_display = ['id', 'is_you', 'order_date', 'order_time', 'user']
+    list_display = ['id', 'is_you', 'order_date', 'order_time', 'user','myhelp']
 
     # 每页显示条数
     list_per_page = 100
