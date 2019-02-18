@@ -130,38 +130,32 @@ class AddView(View):
             school_ins = School.objects.get(id=school_id)
             moment_create = Moment.objects.create(content=content, tag=tag, school=school_ins, user=user_ins)
 
+            # 说说发表数量 +1
+            find_this = User.objects.get(id=creator_id)
+            find_total = find_this.find_total + 1
+            User.objects.filter(id=creator_id).update(find_total=find_total)
+
             # 保存 外键的 图片数据
             # 这一块 写的 绝望  这次再看看 还好 总感觉不是最优写法
             if img_list and moment_create:
                 for img in img_list:
                     # 先保存到本地 不保存七牛 因为直接用七牛的put_data提示报错 期望不是InMemoryUploadedFile类型
                     # 不怕图片名称重复 django处理了
-                    print('图片前')
                     save_img = Image.objects.create(local_img=img, moment=moment_create)
-                    print('图片后')
-                    print(save_img)
                     # 下面做七牛保存
                     moment_local_img = str(MEDIA_ROOT) + '/' + str(save_img.local_img)  # 拼接本地绝对路径
-                    print(moment_local_img)
                     moment_img_id = save_img.id  # 获取当前本地图片的id
-                    print('七牛云前')
                     qi_local_img = qi_local_upload(moment_local_img)  # 七牛上传
-                    print('七牛云后')
-                    print(qi_local_img)
                     Image.objects.filter(id=moment_img_id).update(qiniu_img=qi_local_img)  # 更新七牛数据
 
             # 保存 外键音频
             if voice_one and moment_create:
                 # django 文件上传
                 save_voice = Voice.objects.create(local_voice=voice_one, voice_time=voice_time, moment=moment_create)
-                print(save_voice)
                 # 下面做七牛保存录音
                 moment_voice_one = str(MEDIA_ROOT) + '/' + str(save_voice.local_voice)  # 拼接本地绝对路径
                 moment_voice_id = save_voice.id  # 获取当前本地图片的id
-                print(moment_voice_one)
-                print('音频七牛云前')
                 qi_local_voice = qi_local_upload(moment_voice_one)  # 上传本地录音到七牛服务器
-                print(qi_local_voice)
                 Voice.objects.filter(id=moment_voice_id).update(qiniu_voice=qi_local_voice)  # 更新七牛数据
 
             # 保存 外键视频
@@ -296,26 +290,32 @@ class MomentGoodView(View):
     def get(self, request):
         moment_id = request.GET.get('moment_id')
         u_id = request.GET.get('u_id')
+        his_id = request.GET.get('his_id')
 
         if moment_id and u_id:
-            is_good = Good.objects.filter(moment=moment_id, user=u_id).exists()
+            # 其实不用判断是否已经点赞
+            # is_good = Good.objects.filter(moment=moment_id, user=u_id).exists()
+            # if is_good:
+            #     return JsonResponse({'msg': '已经点赞'})
 
-            if is_good:
-                return JsonResponse({'msg': '已经点赞'})
-            else:
-                # 点赞 +1
-                good_this = Moment.objects.get(id=moment_id)
-                good_num = good_this.good_num + 1
-                Moment.objects.filter(id=moment_id).update(good_num=good_num)
+            # 本说说点赞 +1
+            good_this = Moment.objects.get(id=moment_id)
+            good_num = good_this.good_num + 1
+            Moment.objects.filter(id=moment_id).update(good_num=good_num)
 
-                # 点赞入表
-                user_ins = User.objects.get(id=u_id)
-                moment_ins = Moment.objects.get(id=moment_id)
-                Good.objects.create(moment=moment_ins, user=user_ins)
+            # 个人点赞总数
+            his_ins = User.objects.get(id=his_id)
+            good_total = his_ins.good_total + 1
+            User.objects.filter(id=his_id).update(good_total=good_total)
+
+            # 点赞入表
+            user_ins = User.objects.get(id=u_id)
+            moment_ins = Moment.objects.get(id=moment_id)
+            Good.objects.create(moment=moment_ins, user=user_ins)
 
             return JsonResponse({'code': 200})
         else:
-            return JsonResponse({'errmsg': '尚未选择学校'})
+            return JsonResponse({'msg': '尚未选择学校'})
 
 
 # 发现 举报
@@ -325,20 +325,21 @@ class ReportView(View):
         u_id = request.GET.get('u_id')
 
         if moment_id and u_id:
-            is_have = Report.objects.filter(moment=moment_id,user=u_id).exists()
+            # 不一定要判断，感觉效率太低
+            # is_have = Report.objects.filter(moment=moment_id,user=u_id).exists()
+            #
+            # if is_have :
+            #     return JsonResponse({'msg': '已经举报过了'})
 
-            if is_have :
-                return JsonResponse({'msg': '已经举报过了'})
-            else:
-                # 举报 +1
-                report_this = Moment.objects.get(id=moment_id)
-                report_num = report_this.report_num + 1
-                Moment.objects.filter(id=moment_id).update(report_num=report_num)
+            # 举报 +1
+            report_this = Moment.objects.get(id=moment_id)
+            report_num = report_this.report_num + 1
+            Moment.objects.filter(id=moment_id).update(report_num=report_num)
 
-                # 举报 入表
-                user_ins = User.objects.get(id=u_id)
-                moment_ins = Moment.objects.get(id=moment_id)
-                Report.objects.create(moment=moment_ins,user=user_ins)
+            # 举报 入表
+            user_ins = User.objects.get(id=u_id)
+            moment_ins = Moment.objects.get(id=moment_id)
+            Report.objects.create(moment=moment_ins,user=user_ins)
 
             return JsonResponse({'code': 200})
         else:
@@ -352,6 +353,7 @@ class AddCommentView(View):
         moment_id = request.POST.get('moment_id')
         commentator_id = request.POST.get('user_id')
         content = request.POST.get('content')
+        his_id = request.POST.get('his_id')
 
         # 获取图片
         local_image = request.FILES.getlist('img_list')
@@ -417,6 +419,11 @@ class AddCommentView(View):
                 comment_num = moment.comment_num + 1
                 Moment.objects.filter(id=moment_id).update(comment_num=comment_num)
 
+                # 个人获得评论总数
+                his_ins = User.objects.get(id=his_id)
+                comment_total = his_ins.comment_total + 1
+                User.objects.filter(id=his_id).update(comment_total=comment_total)
+
                 return JsonResponse({'code': 200})
             else:
                 return JsonResponse({'msg':'数据未保存成功！'})
@@ -432,6 +439,7 @@ class ReplyCommentView(View):
         moment_id = request.POST.get('moment_id')
         reply_id = request.POST.get('reply_id')
         reply_content = request.POST.get('reply_content')
+        his_id = request.POST.get('his_id')
 
         user_ins = User.objects.get(id=commentator_id)
         comment_ins = Comment.objects.get(id=comment_id)
@@ -455,6 +463,11 @@ class ReplyCommentView(View):
             moment = Moment.objects.get(id=moment_id)
             comment_num = moment.comment_num + 1
             Moment.objects.filter(id=moment_id).update(comment_num=comment_num)
+
+            # 个人获得评论总数
+            his_ins = User.objects.get(id=his_id)
+            comment_total = his_ins.comment_total + 1
+            User.objects.filter(id=his_id).update(comment_total=comment_total)
 
             return JsonResponse({'code': 200})
         else:
@@ -530,16 +543,27 @@ class CreateFollow(View):
         follow_id = request.GET.get('his_id')
 
         if user_id and follow_id:
-            is_follow = Follow.objects.filter(follow_id=follow_id, user=user_id, is_delete=0).exists()
+            # is_follow = Follow.objects.filter(follow_id=follow_id, user=user_id, is_delete=0).exists()
+            #
+            # if is_follow:
+            #     # 已经关注了
+            #     return JsonResponse({"code": 201})
 
-            if is_follow:
-                # 已经关注了
-                return JsonResponse({"code": 201})
-            else:
-                # 添加关注
-                user_ins = User.objects.get(id=user_id)
-                Follow.objects.create(follow_id=follow_id, user=user_ins)
-                return JsonResponse({"code": 200})
+            # 添加关注
+            user_ins = User.objects.get(id=user_id)
+            Follow.objects.create(follow_id=follow_id, user=user_ins)
+
+            # 我关注的人的总数
+            create_total = user_ins.create_total + 1
+            User.objects.filter(id=user_id).update(create_total=create_total)
+
+            # 他的粉丝
+            his_ins = User.objects.get(id=follow_id)
+            fans_total = his_ins.fans_total + 1
+            User.objects.filter(id=follow_id).update(fans_total=fans_total)
+
+
+            return JsonResponse({"code": 200})
         else:
             return JsonResponse({"errmsg": "该用户不存在"})
 
@@ -556,6 +580,17 @@ class CancelFollow(View):
             if is_follow:
                 # 确实已经关注了，修改一下状态，取消关注
                 Follow.objects.filter(follow_id=follow_id, user=user_id).update(is_delete=1)
+
+                # 我关注的人的总数
+                user_ins = User.objects.get(id=user_id)
+                create_total = user_ins.create_total - 1
+                User.objects.filter(id=user_id).update(create_total=create_total)
+
+                # 他的粉丝
+                his_ins = User.objects.get(id=follow_id)
+                fans_total = his_ins.fans_total - 1
+                User.objects.filter(id=follow_id).update(fans_total=fans_total)
+
                 return JsonResponse({"code": 200})
         else:
             return JsonResponse({"errmsg": "该用户不存在"})

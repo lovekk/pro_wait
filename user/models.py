@@ -62,6 +62,8 @@ class User(models.Model):
     comment_total = models.IntegerField(verbose_name="获评论总数", default=0)
     fans_total = models.IntegerField(verbose_name="获粉丝总数", default=0)
     create_total = models.IntegerField(verbose_name="获关注总数", default=0)
+    find_total = models.IntegerField(verbose_name="说说总数", default=0)
+    help_total = models.IntegerField(verbose_name="help总数", default=0)
 
     is_delete = models.SmallIntegerField(default=0, choices=delete_choices, verbose_name='销户')
     is_school_auth = models.SmallIntegerField(default=0, choices=school_auth_choices, verbose_name='学生认证')

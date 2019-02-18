@@ -21,7 +21,7 @@ class HelpListView(View):
         if school_id:
             # 一对多 反查外键
             # 先查询 所有id
-            myhelp = Help.objects.filter(school=school_id).values('id').order_by('-id')[skip:end_skip]
+            myhelp = Help.objects.filter(school=school_id, is_show=0).values('id').order_by('-id')[skip:end_skip]
             print(myhelp)
 
             data = {}
@@ -32,7 +32,7 @@ class HelpListView(View):
                 # print(item.get('id'))  # {'id': 43}
                 item_id = item.get('id')
                 # 查发布内容
-                for_t = Help.objects.filter(id=item_id, is_show=0).values(
+                for_t = Help.objects.filter(id=item_id).values(
                     'id', 'content', 'publish_date', 'publish_time','price','is_online','is_all_school','is_show','status',
                     u_nick=F('user__nick'), u_img=F('user__head_qn_url'), u_id=F('user__id'))
 
@@ -51,6 +51,65 @@ class HelpListView(View):
             return JsonResponse(data)
         else:
             return JsonResponse({'errmsg': '尚未选择学校'})
+
+
+# 我的help列表
+class MyHelpListView(View):
+    def get(self, request):
+        my_id = request.GET.get('my_id')
+        skip = int(request.GET.get('skip')) # 分页
+        end_skip = skip + 10
+
+        if my_id:
+            # 一对多 反查外键
+            # 先查询 所有id
+            help_num = User.objects.get(id=my_id).help_total
+            myhelp = Help.objects.filter(user=my_id, is_show=0).values('id').order_by('-id')[skip:end_skip]
+            print(myhelp)
+
+            data = {}
+            for_one = {}  # 单次数据
+            all_list = []  # 总数据
+            # 遍历id
+            for item in list(myhelp):
+                # print(item.get('id'))  # {'id': 43}
+                item_id = item.get('id')
+                # 查发布内容
+                for_t = Help.objects.filter(id=item_id).values(
+                    'id', 'content', 'publish_date', 'publish_time','price','is_online','is_all_school','is_show','status',
+                    u_nick=F('user__nick'), u_img=F('user__head_qn_url'), u_id=F('user__id'))
+
+                for_text = list(for_t)
+                # 查发布图片
+                for_img = list(HelpImage.objects.filter(myhelp=item_id).values('id', 'qiniu_img', 'myhelp'))
+
+                for_one['id'] = item_id
+                for_one['for_text'] = for_text
+                for_one['for_img'] = for_img
+                all_list.append(copy.deepcopy(for_one))
+
+            data['code'] = 200
+            data['help_total'] = help_num
+            data['all_list'] = all_list
+
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'errmsg': '尚未选择学校'})
+
+
+# 发现 删除，从我的个人主页删除
+class DelHelp(View):
+    def get(self, request):
+        help_id = request.GET.get('help_id')
+        user_id = request.GET.get('user_id')
+
+        is_show = Help.objects.filter(id=help_id, user=user_id, is_show=0).exists()
+        if is_show:
+            # 删除 假删 修改状态而已
+            Help.objects.filter(id=help_id, is_show=0).update(is_show=1)
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'msg': '抱歉，删除失败！'})
 
 
 # 添加help
@@ -123,6 +182,11 @@ class AddHelpView(View):
             # 保存数据
             help_create = Help.objects.create(content=content,price=price,is_online=is_online,
                                                       is_all_school=is_all_school,user=user,school=school)
+            # 说说发表数量 +1
+            help_this = User.objects.get(id=user_id)
+            help_total = help_this.help_total + 1
+            User.objects.filter(id=user_id).update(help_total=help_total)
+
             if help_create:
                 for img in img_list:
                     # 先保存到本地 不保存七牛 因为直接用七牛的put_data提示报错 期望不是InMemoryUploadedFile类型

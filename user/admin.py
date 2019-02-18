@@ -12,10 +12,10 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ['id','phone_num','password','nick','gender','school_name','my_sign','real_name','account_num',
                     'integral','is_real_name_auth','is_school_auth','stu_num','stu_password','reg_ip','channel',
                     'system_type','device_num','device_model','device_name','operator','create_date','good_total',
-                    'comment_total','fans_total','create_total','head_image','head_qn_url','token']
+                    'comment_total','fans_total','create_total','find_total','help_total','head_image','head_qn_url','token']
 
     # 每页显示条数
-    list_per_page = 10
+    list_per_page = 50
 
     # id 正序
     ordering = ['id']

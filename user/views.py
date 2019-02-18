@@ -204,10 +204,8 @@ class HomePage(View):
     def get(self,request):
         user_id = request.GET.get('user_id')
         if user_id:
-            # 获赞数 评论数
-            moment_num = Moment.objects.filter(user=user_id).aggregate(Sum('good_num'),Sum('comment_num'))
-            # 粉丝数
-            fans_num = Follow.objects.filter(follow_id=user_id,is_delete=0).aggregate(Count('user'))
+            # 获赞数 评论数 粉丝数
+            num_num = User.objects.filter(id=user_id).values('good_total','comment_total','fans_total')
             # 个人信息
             user = User.objects.filter(id=user_id).values('id', 'nick', 'head_qn_url','gender','school_name','my_sign')
             # 一对多 反查外键
@@ -222,11 +220,6 @@ class HomePage(View):
             for item in list(moments_first):
                 # print(item.get('id'))  # {'id': 43}
                 item_id = item.get('id')
-
-                # 浏览 +1
-                look_this = Moment.objects.get(id=item_id)
-                view_num = look_this.view_num + 1
-                Moment.objects.filter(id=item_id).update(view_num=view_num)
 
                 # 查发布内容
                 for_t = Moment.objects.filter(id=item_id).values(
@@ -255,13 +248,12 @@ class HomePage(View):
                 # print(for_one)
 
             data['code'] = 200
-            data['fans_num'] = fans_num
-            data['moment_msg'] = moment_num
+            data['num_num'] = list(num_num)
             data['user_list'] = list(user)
             data['all_list'] = all_list
             return JsonResponse(data)
         else:
-            return JsonResponse({"errmsg": "改用户不存在"})
+            return JsonResponse({"errmsg": "用户不存在"})
 
 
 # ta的个人主页
@@ -272,10 +264,13 @@ class HisHomePage(View):
         skip = int(request.GET.get('skip'))  # 分页
         if user_id:
             end_skip = skip + 10
-            # 获赞数 评论数
-            moment_num = Moment.objects.filter(user=user_id).aggregate(Sum('good_num'),Sum('comment_num'))
-            # 粉丝数
-            fans_num = Follow.objects.filter(follow_id=user_id,is_delete=0).aggregate(Count('user'))
+            # # 获赞数 评论数
+            # moment_num = Moment.objects.filter(user=user_id).aggregate(Sum('good_num'),Sum('comment_num'))
+            # # 粉丝数
+            # fans_num = Follow.objects.filter(follow_id=user_id,is_delete=0).aggregate(Count('user'))
+
+            # 获赞数 评论数 粉丝数
+            num_num = User.objects.filter(id=user_id).values('good_total','comment_total','fans_total')
             # 个人信息
             user = User.objects.filter(id=user_id).values('id', 'nick', 'head_qn_url','gender','school_name','my_sign')
             # 一对多 反查外键
@@ -290,11 +285,6 @@ class HisHomePage(View):
             for item in list(moments_first):
                 # print(item.get('id'))  # {'id': 43}
                 item_id = item.get('id')
-
-                # 浏览 +1
-                look_this = Moment.objects.get(id=item_id)
-                view_num = look_this.view_num + 1
-                Moment.objects.filter(id=item_id).update(view_num=view_num)
 
                 # 查发布内容
                 for_t = Moment.objects.filter(id=item_id).values(
@@ -334,8 +324,7 @@ class HisHomePage(View):
                     data['follow'] = 0  #没有关注
 
             data['code'] = 200
-            data['fans_num'] = fans_num
-            data['moment_msg'] = moment_num
+            data['num_num'] = list(num_num)
             data['user_list'] = list(user)
             data['all_list'] = all_list
             return JsonResponse(data)
@@ -385,6 +374,7 @@ class MyFans(View):
         user_id = request.GET.get('user_id')
         if user_id:
             fans = Follow.objects.filter(follow_id=user_id,is_delete=0).values(
+                u_id = F('user__id'),
                 u_nick = F('user__nick'),
                 u_head_img = F('user__head_qn_url'),
                 u_school_name = F('user__school_name')
@@ -403,17 +393,17 @@ class MyNum(View):
     def get(self,request):
         user_id = request.GET.get('user_id')
         if user_id:
-            # 积分数
-            integral_total = User.objects.get(id=user_id).integral
-            # 粉丝数
-            fans_num = Follow.objects.filter(follow_id=user_id,is_delete=0).aggregate(Count('user'))
-            # 关注数量数
-            follow_num = Follow.objects.filter(user=user_id,is_delete=0).aggregate(Count('follow_id'))
+            # # 积分数
+            # integral_total = User.objects.get(id=user_id).integral
+            # # 粉丝数
+            # fans_num = Follow.objects.filter(follow_id=user_id,is_delete=0).aggregate(Count('user'))
+            # # 关注数量数
+            # follow_num = Follow.objects.filter(user=user_id,is_delete=0).aggregate(Count('follow_id'))
+
+            my_num = User.objects.filter(id=user_id).values('head_qn_url','nick','school_name','integral','fans_total','create_total')
             data = {}
             data['code'] = 200
-            data['integral_num'] = integral_total
-            data['fans_num'] = fans_num
-            data['follow_num'] = follow_num
+            data['my_num'] = list(my_num)
             return JsonResponse(data)
         else:
             return JsonResponse({"errmsg": "改用户不存在"})
