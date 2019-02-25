@@ -4,11 +4,11 @@ from django.views.decorators.http import require_POST,require_GET
 from django.db.models import Count, F
 from django.views.generic import View
 
-from utils.qiniu_upload import qi_upload, qi_local_upload
-
 from lose.models import Lose, LoseImg, LoseComment, LoseReplyComment
 from user.models import User, School
+from moment.models import Push
 
+from utils.qiniu_upload import qi_upload, qi_local_upload
 import time, os, copy
 from pro_wait.settings import MEDIA_ROOT
 
@@ -32,7 +32,6 @@ def lose_list(request):
 
         # 遍历id
         for item in list(loses_first):
-            # print(item.get('id'))  # {'id': 43}
             item_id=item.get('id')
             # 查发布内容
             for_t = Lose.objects.filter(id=item_id).values('id', 'content', 'good_num', 'create_date', 'create_time',
@@ -48,7 +47,6 @@ def lose_list(request):
             for_all['for_img'] = for_img
 
             all_list.append(copy.deepcopy(for_all))
-            # print(for_all)
 
         data['code'] = 200
         data['show_list'] = all_list
@@ -75,12 +73,10 @@ class IndexView(View):
 
             # 遍历id
             for item in list(loses_first):
-                # print(item.get('id'))  # {'id': 43}
                 item_id = item.get('id')
                 # 查发布图片
                 for_all['for_img'] = list(LoseImg.objects.filter(lose=item_id).values('id', 'qiniu_img', 'lose'))
                 all_list.append(copy.deepcopy(for_all))
-                # print(for_all)
 
             data['code'] = 200
             data['text_list'] = list(loses_first)
@@ -99,11 +95,8 @@ def lose_add(request):
     content = request.POST.get('content')
     creator_id = request.POST.get('creator_id')
     is_type = request.POST.get('is_type')
-
     # 获取ajax图片
     img_list = request.FILES.getlist('img_list')
-
-    time_stamp = time.time()  # 多余了  本来是想用时间戳作为 唯一标识的
 
     if school_id and creator_id:
         # 保存文本数据
@@ -202,8 +195,13 @@ class AddCommentView(View):
         if lose_id and user_id:
             user_ins = User.objects.get(id=user_id)
             lose_ins = Lose.objects.get(id=lose_id)
-
             LoseComment.objects.create(content=content, user=user_ins, lose=lose_ins)
+
+            # 发布该信息的人的id 2019/2/24
+            publisher_id = lose_ins.creator_id
+            # 保存信息到推送表里 2019/2/24
+            Push.objects.create(push_content=content, push_type=3, publish_id=lose_id, publisher_id=publisher_id,
+                                commentator=user_ins)
 
             return JsonResponse({'code': 200})
         else:
@@ -217,7 +215,6 @@ class ReplyCommentView(View):
         user_id = request.POST.get('user_id')
         lose_id = request.POST.get('lose_id')
         reply_id = request.POST.get('reply_id')
-
         reply_content = request.POST.get('reply_content')
 
         user_ins = User.objects.get(id=user_id)

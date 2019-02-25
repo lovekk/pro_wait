@@ -7,7 +7,6 @@ from user.models import User
 
 # 文章列表
 def article_list(request):
-
     if request.method == 'GET':
         school_id = request.GET.get('school_id')
         skip = int(request.GET.get('skip'))

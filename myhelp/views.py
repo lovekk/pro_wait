@@ -3,11 +3,11 @@ from django.http import JsonResponse
 from django.db.models import Count, F
 
 from user.models import User, School
+from moment.models import Push
 from myhelp.models import Help, HelpOrder, HelpImage, HelpReport, HelpComment, HelpReplyComment, HelpCommentImage
 
 from utils.qiniu_upload import qi_local_upload, qi_upload
 from pro_wait.settings import MEDIA_ROOT
-
 import copy
 
 
@@ -22,14 +22,12 @@ class HelpListView(View):
             # 一对多 反查外键
             # 先查询 所有id
             myhelp = Help.objects.filter(school=school_id, is_show=0).values('id').order_by('-id')[skip:end_skip]
-            print(myhelp)
 
             data = {}
             for_one = {}  # 单次数据
             all_list = []  # 总数据
             # 遍历id
             for item in list(myhelp):
-                # print(item.get('id'))  # {'id': 43}
                 item_id = item.get('id')
                 # 查发布内容
                 for_t = Help.objects.filter(id=item_id).values(
@@ -53,7 +51,7 @@ class HelpListView(View):
             return JsonResponse({'errmsg': '尚未选择学校'})
 
 
-# 我的help列表
+# 我的 help列表
 class MyHelpListView(View):
     def get(self, request):
         my_id = request.GET.get('my_id')
@@ -65,14 +63,12 @@ class MyHelpListView(View):
             # 先查询 所有id
             help_num = User.objects.get(id=my_id).help_total
             myhelp = Help.objects.filter(user=my_id, is_show=0).values('id').order_by('-id')[skip:end_skip]
-            print(myhelp)
 
             data = {}
             for_one = {}  # 单次数据
             all_list = []  # 总数据
             # 遍历id
             for item in list(myhelp):
-                # print(item.get('id'))  # {'id': 43}
                 item_id = item.get('id')
                 # 查发布内容
                 for_t = Help.objects.filter(id=item_id).values(
@@ -97,7 +93,7 @@ class MyHelpListView(View):
             return JsonResponse({'errmsg': '尚未选择学校'})
 
 
-# 发现 删除，从我的个人主页删除
+# help删除，从我的帮助页面删除
 class DelHelp(View):
     def get(self, request):
         help_id = request.GET.get('help_id')
@@ -113,7 +109,7 @@ class DelHelp(View):
 
 
 # 添加help
-# ========================学生认证版============================
+# ========================学生认证 积分 版 === 不用============================
 class HelpAddView(View):
     def post(self,request):
 
@@ -206,7 +202,7 @@ class AddHelpView(View):
             return JsonResponse({'errmsg': '尚未选择学校或该用户不存在'})
 
 
-# 接单
+# 帮助 help接单
 class ToHelpView(View):
     def post(self,request):
         # 接收参数
@@ -218,7 +214,7 @@ class ToHelpView(View):
             help_ins = Help.objects.get(id=help_id)
             if help_ins.status == 0:
                 helper_ins = User.objects.get(id=helper_id)
-                save_help = Help.objects.filter(id=help_id).update(status=1)
+                Help.objects.filter(id=help_id).update(status=1)  # 更新为接单
                 # 创建接单信息
                 order_create = HelpOrder.objects.create(user=helper_ins, myhelp=help_ins)
                 if order_create:
@@ -229,7 +225,7 @@ class ToHelpView(View):
             return JsonResponse({'errmsg':'对不起，参数出现错误！'})
 
 
-# 接单，这是认证版本，不用
+# 帮助 help接单，这是认证版本，不用
 class HelpOrderView(View):
     def post(self,request):
         # 接收参数
@@ -286,7 +282,6 @@ class HelpDetailView(View):
             view_num = look_this.view_num + 1
             Help.objects.filter(id=help_id).update(view_num=view_num)
             # ======================================Help详情================================
-
             # 查询 详情和评论
             myhelp = Help.objects.filter(id=help_id).values(
                 'id',
@@ -357,13 +352,12 @@ class HelpDetailView(View):
             return JsonResponse({'errmsg': '请求发生错误'})
 
 
-# 添加一级评论
+# 帮助help 添加一级评论
 class AddHelpCommentView(View):
     def post(self, request):
         myhelp_id = request.POST.get('help_id')
         commentator_id = request.POST.get('user_id')
         content = request.POST.get('content')
-
         # 获取图片
         local_image = request.FILES.getlist('img_list')
 
@@ -371,10 +365,14 @@ class AddHelpCommentView(View):
 
             user_ins = User.objects.get(id=commentator_id)
             myhelp_ins = Help.objects.get(id=myhelp_id)
-
             # 只有文本
             comment_create = HelpComment.objects.create(content=content, user=user_ins, myhelp=myhelp_ins)
 
+            # 发布该help的人  2019/2/24
+            publisher_id = myhelp_ins.user_id
+            # 保存信息到推送表里 2019/2/24
+            Push.objects.create(push_content=content, push_type=1, publish_id=myhelp_id, publisher_id=publisher_id,
+                                commentator=user_ins)
             # 如果有图片
             if local_image and comment_create:
                 for item in local_image:
@@ -391,14 +389,13 @@ class AddHelpCommentView(View):
 
             if comment_create:
                 return JsonResponse({'code': 200})
-
             else:
                 return JsonResponse({'msg': '数据未保存成功！'})
         else:
             return JsonResponse({'msg': '数据未保存成功！'})
 
 
-# 添加二级评论
+# 帮助help 添加二级评论
 class ReplyHelpCommentView(View):
     def post(self, request):
         comment_id = request.POST.get('comment_id')
@@ -411,15 +408,27 @@ class ReplyHelpCommentView(View):
         comment_ins = HelpComment.objects.get(id=comment_id)
         myhelp_ins = Help.objects.get(id=myhelp_id)
 
+        # 一级评论的人的id
+        publisher_id = comment_ins.user_id
+
         # 如果是 回复的回复
         if reply_id:
-            print('----------------------------------------------------------')
             comment_reply_ins = HelpReplyComment.objects.get(id=reply_id)
             reply_comment = HelpReplyComment.objects.create(content=reply_content, user=user_ins, myhelp=myhelp_ins,
                                                             comment=comment_ins, parent=comment_reply_ins)
+            # 做推送 2019/2/24
+            comment_reply_user_id = comment_reply_ins.user_id
+            # 保存信息到推送表里 三级评论 2019/2/24
+            Push.objects.create(push_content=reply_content, push_type=1, publish_id=myhelp_id,
+                                publisher_id=comment_reply_user_id, commentator=user_ins)
+
         else:
             reply_comment = HelpReplyComment.objects.create(content=reply_content, user=user_ins, myhelp=myhelp_ins,
                                                             comment=comment_ins)
+            # 保存信息到推送表里 二级评论 2019/2/24
+            Push.objects.create(push_content=reply_content, push_type=1, publish_id=myhelp_id,
+                                publisher_id=publisher_id, commentator=user_ins)
+
         if reply_comment:
 
             return JsonResponse({'code': 200})
@@ -427,7 +436,34 @@ class ReplyHelpCommentView(View):
             return JsonResponse({'errmsg': '数据没有保存成功！'})
 
 
+# 帮助help 举报
+class HelpReportView(View):
+    def get(self, request):
+        help_id = request.GET.get('help_id')
+        u_id = request.GET.get('u_id')
 
+        if help_id and u_id:
+            # 不做判断 耗性能
+            # is_have = HelpReport.objects.filter(myhelp=help_id,user=u_id).exists()
+            # if is_have :
+            #     return JsonResponse({'msg': '已经举报过了'})
+
+            # 举报 +1
+            report_this = Help.objects.get(id=help_id)
+            report_num = report_this.report_num + 1
+            Help.objects.filter(id=help_id).update(report_num=report_num)
+
+            # 举报 入表
+            user_ins = User.objects.get(id=u_id)
+            help_ins = Help.objects.get(id=help_id)
+            HelpReport.objects.create(myhelp=help_ins,user=user_ins)
+
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'msg': '已经举报过了！'})
+
+
+# ===============================统计======我发布的=====我接单的==========================
 # Help订单
 # 1.我发布的
 class PublishOrderView(View):
@@ -482,33 +518,6 @@ class TakeOrderView(View):
         else:
             return JsonResponse({'errmsg': '用户不存在'})
 
-
-
-# 发现 举报
-class HelpReportView(View):
-    def get(self, request):
-        help_id = request.GET.get('help_id')
-        u_id = request.GET.get('u_id')
-
-        if help_id and u_id:
-            is_have = HelpReport.objects.filter(myhelp=help_id,user=u_id).exists()
-
-            if is_have :
-                return JsonResponse({'msg': '已经举报过了'})
-            else:
-                # 举报 +1
-                report_this = Help.objects.get(id=help_id)
-                report_num = report_this.report_num + 1
-                Help.objects.filter(id=help_id).update(report_num=report_num)
-
-                # 举报 入表
-                user_ins = User.objects.get(id=u_id)
-                help_ins = Help.objects.get(id=help_id)
-                HelpReport.objects.create(myhelp=help_ins,user=user_ins)
-
-            return JsonResponse({'code': 200})
-        else:
-            return JsonResponse({'errmsg': '尚未选择学校'})
 
 
 

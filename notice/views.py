@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse,JsonResponse
 from .models import Notice
 
+
 # 将公告信息传给前端
 # 公告列表
 def notice_list(request):

@@ -6,7 +6,7 @@ from user.models import User, School,RecoveryPerson
 from django.db.models import Count, F
 
 
-# 添加预约
+# 分类回收 添加预约
 class AddAppoint(View):
     def post(self,request):
         school_id = request.POST.get('school_id')
@@ -17,7 +17,6 @@ class AddAppoint(View):
             thing_type = request.POST.get('thing_type')
             address = request.POST.get('address')
             phone_num = request.POST.get('phone_num')
-            print(phone_num)
             remark = request.POST.get('remark')
 
             #外键实例
@@ -34,7 +33,7 @@ class AddAppoint(View):
             return JsonResponse({'errmsg':'未选择学校'})
 
 
-# 上门扫码 更新预约状态
+# 分类回收 上门扫码 更新预约状态
 class Scan(View):
     # 1.给一个预约的id，扫码显示一个袋子编号
     def post(self,request):
@@ -43,8 +42,6 @@ class Scan(View):
         #  获取到袋子编号，输入传给后端保存
         bag_num = request.POST.get('bag_num')
         is_bag = Bag.objects.filter(number=bag_num).exists()
-        print(bag_num)
-        print(is_bag)
 
         if user_id and is_bag:
             # 根据用户查找出来最新的一条预约记录
@@ -63,24 +60,24 @@ class Scan(View):
 
 
 
-#一键预约
+# 分类回收 一键预约
 class OneKey(View):
     def get(self,request):
         # 获取学校
-        school_id = request.GET.get('school_id')
+        user_id = request.GET.get('user_id')
         # 数据
         data = {}
-        if school_id:
+        if user_id:
             # 只有前一百名
-            all_rank = MyRank.objects.filter(school=school_id).values('money','times',u_nick=F('user__nick')).order_by('-money')[0:100]
+            my_appoint = Appoint.objects.filter(user=user_id).values('thing_type','address','phone_num','remark').order_by('-id')[0:1]
             data['code'] = 200
-            data['rank'] = list(all_rank)
+            data['my_appoint'] = list(my_appoint)
             return JsonResponse(data)
         else:
             return JsonResponse({"errmsg":"没选择学校"})
 
 
-#排名显示
+# 分类回收 排名显示
 class RankList(View):
     def get(self,request):
         # 获取学校
@@ -97,7 +94,7 @@ class RankList(View):
             return JsonResponse({"errmsg":"没选择学校"})
 
 
-# 显示回收物品的价格信息
+# 分类回收 显示回收物品的价格信息
 class ThingPriceList(View):
     def get(self,request):
         things = Price.objects.values()
@@ -108,7 +105,7 @@ class ThingPriceList(View):
         return JsonResponse(data)
 
 
-# 预约提醒信息
+# 分类回收 预约提醒信息
 class AppointTips(View):
     def get(self,request):
         school_id = request.GET.get('school_id')
@@ -131,7 +128,24 @@ class AppointTips(View):
             return JsonResponse({"errmsg":"未选择学校"})
 
 
-# 环保知识简介
+# 分类回收 回收订单
+class BackOrder(View):
+    def get(self, request):
+        my_id = request.GET.get('my_id')
+        if my_id:
+            # 查询所有的订单，并不是只有完成的
+            appoint_msg = Appoint.objects.filter(user=my_id).values('thing_type','money','create_date','address','status')
+
+            data = {}
+            data['code'] = 200
+            data['my_back_order'] = list(appoint_msg)
+
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'errmsg':'你是谁'})
+
+
+# 分类回收 环保知识简介
 class Introduce(View):
     def get(self,request):
 
@@ -159,8 +173,6 @@ class FindBagView(View):
         bag_num = request.GET.get('bag_num')
         # 2.判断袋子编号是否正确，即数据库里能查到该袋子编号,
         is_have = Appoint.objects.filter(bag_num=bag_num, status=1).exists()
-
-        print(is_have)
 
         if is_have:
             # 袋子存在 找出信息
@@ -221,8 +233,6 @@ class WeighView(View):
 
                 # 更新该用户总积分
                 user_up = User.objects.get(id=user_id)
-                print(user_up)
-                print(user_up.integral)
                 integral_num = user_up.integral + get_money
                 User.objects.filter(id=user_id).update(integral=integral_num)
 
@@ -236,8 +246,6 @@ class WeighView(View):
 
                 # 更新该用户总积分
                 user_up = User.objects.get(id=user_id)
-                print(user_up)
-                print(user_up.integral)
                 integral_num = user_up.integral + get_money
                 User.objects.filter(id=user_id).update(integral=integral_num)
 
@@ -320,15 +328,12 @@ class LoginView(View):
     def post(self,request):
         log_num = request.POST.get('log_num')
         password = request.POST.get('password')
-        print(log_num)
-        print(password)
         if log_num and password:
             user_info = list(RecoveryPerson.objects.filter(log_num=log_num,password=password,is_use=0).values(
                 'log_num',
                 'school__id',
                 'school__name')
             )
-            print(user_info)
             if user_info:
                 data = {}
                 data['code'] = 200

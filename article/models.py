@@ -17,11 +17,11 @@ class Article(models.Model):
         (0, '不是原创'),
         (1, '原创'),
     )
-    title = models.CharField(max_length=50, verbose_name="文章标题", default="")
+    title = models.CharField(max_length=100, verbose_name="文章标题", default="")
     list_img = models.ImageField(upload_to='article/%Y/%m', verbose_name="文章头像", default="")
     content = HTMLField(verbose_name="文章内容")
-    editor = models.CharField(max_length=10, verbose_name="编辑人员", default="")
-    author = models.CharField(max_length=10, verbose_name="作者", default="")
+    editor = models.CharField(max_length=30, verbose_name="编辑人员", default="")
+    author = models.CharField(max_length=30, verbose_name="作者", default="")
     publish_date = models.DateField(default=datetime.now, verbose_name="发表日期")
     publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
     view_num = models.IntegerField(verbose_name="浏览量", default=0)
@@ -36,10 +36,8 @@ class Article(models.Model):
         verbose_name = "九点读书·文章"
         verbose_name_plural = verbose_name
 
-
     def __str__(self):
         return self.title
-
 
     # 指定字段内容长度，超出部分。。。代替
     def short_content(self):
@@ -57,7 +55,7 @@ class Article(models.Model):
 class ArticleComment(models.Model):
     comment_datetime = models.DateTimeField(default=datetime.now, verbose_name="评论时间")
     create_date = models.DateField(auto_now_add=True, verbose_name="创建日期")
-    content = models.CharField(max_length=100,verbose_name="评论内容",default="")
+    content = models.CharField(max_length=300,verbose_name="评论内容",default="")
     commentator = models.ForeignKey('user.User',verbose_name='评论者',on_delete=models.CASCADE,null=True)
     article = models.ForeignKey('Article', verbose_name='文章推荐', on_delete=models.CASCADE, null=True)
 

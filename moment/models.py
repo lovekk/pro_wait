@@ -20,7 +20,7 @@ class Moment(models.Model):
     content = models.CharField(max_length=500, verbose_name="动态内容", default="")
     publish_date = models.DateField(auto_now_add=True, verbose_name="发表日期")
     publish_time = models.TimeField(auto_now_add=True, verbose_name="发表时间")
-    tag = models.CharField(max_length=30,verbose_name="标签",default="")
+    tag = models.CharField(max_length=50,verbose_name="标签",default="")
     good_num = models.IntegerField(verbose_name="点赞数量",default=0)
     comment_num = models.IntegerField(verbose_name="评论数量",default=0)
     view_num = models.IntegerField(verbose_name="浏览量",default=0)
@@ -46,7 +46,7 @@ class Moment(models.Model):
 class Voice(models.Model):
     qiniu_voice = models.CharField(max_length=100, verbose_name="七牛云地址", default="")
     local_voice = models.FileField(verbose_name="本地地址",upload_to='moment_voice/%Y/%m/%d',default="")
-    voice_time = models.CharField(max_length=20, verbose_name="音频时长", default="")
+    voice_time = models.CharField(max_length=30, verbose_name="音频时长", default="")
     publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
 
     moment = models.OneToOneField('Moment', verbose_name='发现id', on_delete=models.CASCADE, null=True)
@@ -63,7 +63,7 @@ class Video(models.Model):
     local_video = models.FileField(verbose_name="本地地址",upload_to='moment_video/%Y/%m/%d',default="")
     qiniu_video_img = models.CharField(max_length=100, verbose_name="七牛云视频缩略图", default="")
     local_video_img = models.ImageField(verbose_name="本地视频缩略图",upload_to='moment_video/%Y/%m/%d',default="")
-    video_size = models.CharField(max_length=20, verbose_name="视频大小", default="")
+    video_size = models.CharField(max_length=30, verbose_name="视频大小", default="")
     publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
 
     moment = models.ForeignKey('Moment', verbose_name='发现id', on_delete=models.CASCADE, null=True)
@@ -109,7 +109,7 @@ class Comment(models.Model):
         (0, '未删除'),
         (1, '已经删除'),
     )
-    content = models.CharField(max_length=100,verbose_name="评论内容",default="")
+    content = models.CharField(max_length=300,verbose_name="评论内容",default="")
     comment_date = models.DateField(auto_now_add=True, verbose_name="评论日期")
     comment_time = models.TimeField(auto_now_add=True, verbose_name="评论时间")
     is_show = models.SmallIntegerField(default=0, choices=show_choices, verbose_name='是否删除')
@@ -146,7 +146,7 @@ class CommentImage(models.Model):
 class CommentVoice(models.Model):
     qiniu_voice = models.CharField(max_length=100, verbose_name="七牛云地址", default="")
     local_voice = models.FileField(verbose_name="本地地址",upload_to='moment_comment_voice/%Y/%m/%d',default="")
-    voice_time = models.CharField(max_length=20, verbose_name="音频时长", default="")
+    voice_time = models.CharField(max_length=30, verbose_name="音频时长", default="")
     publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
 
     comment = models.OneToOneField('Comment', verbose_name='评论id', on_delete=models.CASCADE, null=True)
@@ -163,7 +163,7 @@ class CommentVideo(models.Model):
     local_video = models.FileField(verbose_name="本地地址",upload_to='moment_comment_video/%Y/%m/%d',default="")
     qiniu_video_img = models.CharField(max_length=100, verbose_name="七牛云视频缩略图", default="")
     local_video_img = models.ImageField(verbose_name="本地视频缩略图",upload_to='moment_video/%Y/%m/%d',default="")
-    video_size = models.CharField(max_length=20, verbose_name="视频大小", default="")
+    video_size = models.CharField(max_length=30, verbose_name="视频大小", default="")
     publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
 
     comment = models.ForeignKey('Comment', verbose_name='评论id', on_delete=models.CASCADE, null=True)
@@ -210,7 +210,7 @@ class ReplyComment(models.Model):
 # =======================================================其他=====================================================
 # 标签表
 class Tag(models.Model):
-    name = models.CharField(max_length=30, verbose_name="标签名称", default="")
+    name = models.CharField(max_length=50, verbose_name="标签名称", default="")
     add_time = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
 
     class Meta:
@@ -231,3 +231,24 @@ class Report(models.Model):
         verbose_name_plural = verbose_name
 
 
+# 推送表 2019/2/24
+class Push(models.Model):
+    types = (
+        (0, '说说发现'),
+        (1, '帮助help'),
+        (2, '二手市场'),
+        (3, '失物招领'),
+    )
+    push_content = models.CharField(max_length=300, verbose_name="评论内容", default="")
+    comment_date = models.DateField(auto_now_add=True, verbose_name="评论日期")
+    comment_time = models.TimeField(auto_now_add=True, verbose_name="评论时间")
+    push_type =  models.SmallIntegerField(default=0, choices=types, verbose_name='推送类别')
+    publish_id = models.IntegerField(verbose_name="发布内容的id", default=0)
+    publisher_id = models.IntegerField(verbose_name="发布者的id", default=0)
+
+    commentator = models.ForeignKey('user.User', verbose_name='评论者', on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        db_table = 'dn_moment_push'
+        verbose_name = "发现·消息推送"
+        verbose_name_plural = verbose_name

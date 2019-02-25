@@ -2,8 +2,9 @@ from django.contrib import admin
 from article.models import Article,ArticleComment
 
 
+# 九点读书 文章
 @admin.register(Article)
-class Article(admin.ModelAdmin):
+class ArticleAdmin(admin.ModelAdmin):
 
     # 显示的字段
     list_display = ['id','title','short_content','author','editor','is_all_school','is_original','publish_date','view_num','school','is_show']
@@ -19,11 +20,12 @@ class Article(admin.ModelAdmin):
 
     # 筛选器
     list_filter = ['school', 'is_all_school', 'is_original', 'is_show'] # 过滤器  一般ManyToManyField多对多字段用过滤器
-    search_fields = ['title', 'content']  # 搜索字段 标题等文本字段用搜索框
+    search_fields = ['title']  # 搜索字段 标题等文本字段用搜索框
 
 
+# 九点读书 文章评论
 @admin.register(ArticleComment)
-class Article_comment(admin.ModelAdmin):
+class ArticleCommentAdmin(admin.ModelAdmin):
 
     # 显示的字段
     list_display = ['id','comment_datetime','create_date','content','commentator','article']

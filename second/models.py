@@ -22,7 +22,7 @@ class Second(models.Model):
         (1, '已经删除'),
     )
 
-    content = models.CharField(max_length=300, default='', verbose_name='内容')
+    content = models.CharField(max_length=500, default='', verbose_name='内容')
     price = models.IntegerField(verbose_name="价格",default=0)
     view_num = models.IntegerField(verbose_name="浏览量",default=0)
     good_num = models.IntegerField(verbose_name="点赞数",default=0)
@@ -34,6 +34,7 @@ class Second(models.Model):
     is_first = models.SmallIntegerField(default=0, choices=first_choices, verbose_name='置顶')
     is_type = models.SmallIntegerField(default=1, choices=type_choices, verbose_name='新型')
     is_sale = models.SmallIntegerField(default=0, choices=sale_choices, verbose_name='出售')
+
     school = models.ForeignKey('user.School', verbose_name='学校', on_delete=models.CASCADE, null=True)
     creator = models.ForeignKey('user.User',verbose_name='发布者',on_delete=models.CASCADE,null=True)
 
@@ -46,12 +47,13 @@ class Second(models.Model):
         return self.content
 
 
-# 相关图片
+# 二手市场 相关图片
 class SecondImg(models.Model):
     qiniu_img = models.CharField(max_length=100, default='', verbose_name='七牛地址')
     local_img = models.ImageField(verbose_name='本地地址', upload_to='second/%Y/%m/%d', default='')
-    second = models.ForeignKey('Second', verbose_name='校园二手', on_delete=models.CASCADE, null=True)
     create_datetime = models.DateTimeField(auto_now_add=True, verbose_name="日期时间")
+
+    second = models.ForeignKey('Second', verbose_name='校园二手', on_delete=models.CASCADE, null=True)
 
     class Meta:
         db_table = 'dn_second_img'
@@ -59,13 +61,13 @@ class SecondImg(models.Model):
         verbose_name_plural = verbose_name
 
 
-# 评论表
+# 二手市场 评论表
 class SecondComment(models.Model):
     show_choices = (
         (0, '未删除'),
         (1, '已经删除'),
     )
-    content = models.CharField(max_length=100,verbose_name="评论内容",default="")
+    content = models.CharField(max_length=300,verbose_name="评论内容",default="")
     comment_date = models.DateField(auto_now_add=True, verbose_name="评论日期")
     comment_time = models.TimeField(auto_now_add=True, verbose_name="评论时间")
     is_show = models.SmallIntegerField(default=0, choices=show_choices, verbose_name='是否删除')
@@ -83,10 +85,9 @@ class SecondComment(models.Model):
         verbose_name_plural = verbose_name
 
 
-# 评论回复表 二级评论
+# 二手市场 评论回复表 二级评论
 class SecondReplyComment(models.Model):
-
-    content = models.CharField(max_length=100,verbose_name="评论内容",default="")
+    content = models.CharField(max_length=300,verbose_name="评论内容",default="")
     comment_date = models.DateField(auto_now_add=True, verbose_name="回复评论日期")
     comment_time = models.TimeField(auto_now_add=True, verbose_name="回复评论时间")
 
@@ -101,7 +102,7 @@ class SecondReplyComment(models.Model):
         verbose_name_plural = verbose_name
 
 
-# 举报表
+# 二手市场 举报表
 class SecondReport(models.Model):
     publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
 

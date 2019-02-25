@@ -32,7 +32,7 @@ class MyRankAdmin(admin.ModelAdmin):
     list_display = ['id','times','money','user','school','create_datetime']
 
     # 每页显示条数
-    list_per_page = 100
+    list_per_page = 50
 
     # id 正序
     ordering = ['money']
@@ -46,7 +46,7 @@ class PriceAdmin(admin.ModelAdmin):
     list_display = ['id','name','unit','price','create_datetime']
 
     # 每页显示条数
-    list_per_page = 20
+    list_per_page = 50
 
     # id 正序
     ordering = ['id']
@@ -60,7 +60,7 @@ class BagAdmin(admin.ModelAdmin):
     list_display = ['id','number','create_datetime']
 
     # 每页显示条数
-    list_per_page = 100
+    list_per_page = 50
 
     # id 正序
     ordering = ['-id']

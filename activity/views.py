@@ -5,12 +5,14 @@ from django.db.models import Count, F
 from .models import Activity, ActivityComment
 from user.models import User
 
+
 #热门活动
 def activity_list(request):
     if request.method == 'GET':
         school_id = request.GET.get('school_id')
         skip = int(request.GET.get('skip'))
         if school_id:
+            # 分页  10个一组
             end_skip = skip + 10
             activities = Activity.objects.filter(school=school_id, is_show=1).values(
                 'id',
@@ -83,7 +85,6 @@ def add_comment(request):
 
         activity_comment.save()
         return JsonResponse({'code':200})
-
     else:
         return JsonResponse({'errmsg':'提交评论失败'})
 

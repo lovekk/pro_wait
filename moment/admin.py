@@ -1,6 +1,6 @@
 from django.contrib import admin
 from moment.models import Moment, Voice, Video, Image, Good, Comment, ReplyComment, Tag, Report, CommentGood
-from moment.models import CommentImage, CommentVoice, CommentVideo
+from moment.models import CommentImage, CommentVoice, CommentVideo, Push
 
 # 发现
 @admin.register(Moment)
@@ -20,8 +20,8 @@ class MomentAdmin(admin.ModelAdmin):
     list_display_links = ['id', 'content']
 
     # 筛选器
-    list_filter = ['school', 'tag', 'report_num', 'is_first', 'is_show'] # 过滤器  一般ManyToManyField多对多字段用过滤器
-    search_fields = ['content', 'school']  # 搜索字段 标题等文本字段用搜索框
+    list_filter = ['school', 'tag', 'report_num', 'is_show'] # 过滤器  一般ManyToManyField多对多字段用过滤器
+    search_fields = ['content']  # 搜索字段 标题等文本字段用搜索框
     date_hierarchy = 'publish_date'  # 详细时间分层筛选　日期时间用分层筛选
 
 
@@ -120,6 +120,7 @@ class ReplyCommentAdmin(admin.ModelAdmin):
     # id 排序
     ordering = ['-id']
 
+
 # 评论点赞
 @admin.register(CommentGood)
 class GoodAdmin(admin.ModelAdmin):
@@ -137,7 +138,7 @@ class GoodAdmin(admin.ModelAdmin):
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
     # 显示的字段
-    list_display = ['id', 'moment', 'user']
+    list_display = ['id', 'moment', 'user', 'publish_datetime']
 
     # 每页显示条数
     list_per_page = 50
@@ -161,7 +162,7 @@ class CommentImageAdmin(admin.ModelAdmin):
 
 # 回复语音
 @admin.register(CommentVoice)
-class CommentVoicetAdmin(admin.ModelAdmin):
+class CommentVoiceAdmin(admin.ModelAdmin):
     # 显示的字段
     list_display = ['id', 'qiniu_voice', 'local_voice', 'voice_time', 'publish_datetime', 'comment']
 
@@ -178,6 +179,20 @@ class CommentVideoAdmin(admin.ModelAdmin):
     # 显示的字段
     list_display = ['id', 'qiniu_video', 'local_video', 'qiniu_video_img', 'local_video_img',
                     'video_size', 'publish_datetime','comment']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+
+# 推送
+@admin.register(Push)
+class PushAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'push_content', 'comment_date', 'comment_time', 'push_type',
+                    'publish_id', 'publisher_id','commentator']
 
     # 每页显示条数
     list_per_page = 50

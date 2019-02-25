@@ -2,8 +2,9 @@ from django.contrib import admin
 from culture.models import CultureComment,Culture
 
 
+# 校园文化
 @admin.register(Culture)
-class Culture(admin.ModelAdmin):
+class CultureAdmin(admin.ModelAdmin):
 
     # 显示的字段
     list_display = ['id','title','short_introduction','short_content','editor','view_num','comment_num','school',
@@ -23,14 +24,15 @@ class Culture(admin.ModelAdmin):
     search_fields = ['title']  # 搜索字段 标题等文本字段用搜索框
 
 
+# 校园文化评论
 @admin.register(CultureComment)
-class Culture_comment(admin.ModelAdmin):
+class CultureCommentAdmin(admin.ModelAdmin):
 
     # 显示的字段
     list_display = ['id','content','commentator','culture','create_date','comment_date']
 
     # 每页显示条数
-    list_per_page = 100
+    list_per_page = 50
 
     # id 排序
     ordering = ['-id']

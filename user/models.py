@@ -47,7 +47,7 @@ class User(models.Model):
     stu_num = models.CharField(max_length=30,verbose_name='学号',default="")
     stu_password = models.CharField(max_length=30,verbose_name='学号密码',default="")
 
-    reg_ip = models.CharField(max_length=30, default='', verbose_name='注册IP')
+    reg_ip = models.CharField(max_length=100, default='', verbose_name='注册IP')
     token = models.CharField(max_length=100,verbose_name='身份令牌',default="")
     device_num = models.CharField(max_length=50,verbose_name='设备唯一标识',default="")
     device_model = models.CharField(max_length=50,verbose_name='设备型号',default="")
@@ -157,7 +157,7 @@ class AboutWeComment(models.Model):
     create_time = models.TimeField(auto_now_add=True, verbose_name="评论日期")
     is_delete = models.SmallIntegerField(default=0, choices=delete_choices, verbose_name='是否显示')
 
-    user = models.ForeignKey('user',verbose_name='用户',on_delete=models.CASCADE,null=True)
+    user = models.ForeignKey('User',verbose_name='用户',on_delete=models.CASCADE,null=True)
 
     class Meta:
         db_table = 'dn_user_about_comment'
@@ -190,7 +190,7 @@ class RecoveryPerson(models.Model):
 class Login(models.Model):
     phone_num = models.CharField(max_length=15, verbose_name="手机号", default="")
     password = models.CharField(max_length=50, verbose_name='密码', default="")
-    log_ip = models.CharField(max_length=30,  verbose_name='登录IP', default="")
+    log_ip = models.CharField(max_length=100,  verbose_name='登录IP', default="")
     device_num = models.CharField(max_length=50, verbose_name='设备唯一标识', default="")
     device_model = models.CharField(max_length=50, verbose_name='设备型号', default="")
     device_name = models.CharField(max_length=50, verbose_name='设备名称', default="")
@@ -204,13 +204,50 @@ class Login(models.Model):
     jail_break = models.CharField(max_length=10, verbose_name='设备是否越狱', default="")
     create_datetime = models.DateTimeField(auto_now_add=True,verbose_name="创建日期")
 
-    user = models.ForeignKey('user', verbose_name='用户', on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey('User', verbose_name='用户', on_delete=models.CASCADE, null=True)
 
     class Meta:
         db_table = 'dn_user_login'
         verbose_name = "用户·登录"
         verbose_name_plural = verbose_name
 
+
+# 积分商城 2019/2/19
+class IntegralGoods(models.Model):
+    name = models.CharField(max_length=10, verbose_name="商品名称", default="")
+    price = models.IntegerField(verbose_name="商品价格", default="100")
+    desc = models.CharField(max_length=200, verbose_name="商品描述", default="")
+    image = models.ImageField(verbose_name="商品图片", upload_to="user_shop/%Y/%m/%d", default="")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'dn_user_shop'
+        verbose_name = "用户·积分商城"
+        verbose_name_plural = verbose_name
+
+
+# 订单表  2019/2/19
+class IntegralOrder(models.Model):
+    status_choice = (
+        (0, '未发货'),
+        (1, '已经发货'),
+    )
+    phone_num = models.CharField(max_length=15, verbose_name="手机号", default="")
+    address = models.CharField(max_length=50,verbose_name="收货地址",default="")
+    create_date = models.DateField(auto_now_add=True, verbose_name="订单时间")
+    change_date = models.DateField(auto_now=True, verbose_name="修改时间")
+    status = models.SmallIntegerField(default=0, choices=status_choice, verbose_name='是否发货')
+    which_school = models.CharField(max_length=30, verbose_name="学校", default="")
+
+    user = models.ForeignKey('User', verbose_name='收货人', on_delete=models.CASCADE, null=True)
+    good = models.ForeignKey('IntegralGoods',verbose_name='商品', on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        db_table = 'dn_user_shop_order'
+        verbose_name = "用户·积分订单"
+        verbose_name_plural = verbose_name
 
 
 # 成绩表
@@ -223,13 +260,14 @@ class Cj(models.Model):
     xuefen = models.CharField(max_length=50,verbose_name='学分')
     leibie = models.CharField(max_length=50,verbose_name='课程类别')
 
-    user = models.ForeignKey('user', verbose_name='用户', on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey('User', verbose_name='用户', on_delete=models.CASCADE, null=True)
     school = models.ForeignKey('School', verbose_name='学校', on_delete=models.CASCADE, null=True)
 
     class Meta:
         db_table = 'dn_user_score'
         verbose_name = "用户·成绩"
         verbose_name_plural = verbose_name
+
 
 # 课表
 class Kb(models.Model):
@@ -269,7 +307,7 @@ class Kb(models.Model):
     wu6 = models.CharField(max_length=100)
     wu7 = models.CharField(max_length=100)
 
-    user = models.ForeignKey('user', verbose_name='用户', on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey('User', verbose_name='用户', on_delete=models.CASCADE, null=True)
     school = models.ForeignKey('School', verbose_name='学校', on_delete=models.CASCADE, null=True)
 
     class Meta:

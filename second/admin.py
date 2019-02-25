@@ -2,6 +2,7 @@ from django.contrib import admin
 from second.models import Second,SecondImg,SecondComment,SecondReplyComment,SecondReport
 
 
+# 二手市场
 @admin.register(Second)
 class SecondAdmin(admin.ModelAdmin):
 
@@ -20,10 +21,10 @@ class SecondAdmin(admin.ModelAdmin):
 
     # 筛选器
     list_filter = ['school', 'report_num','is_type','is_first','is_sale'] # 过滤器  一般ManyToManyField多对多字段用过滤器
-    search_fields = ['content', 'school']  # 搜索字段 标题等文本字段用搜索框
-    date_hierarchy = 'create_date'  # 详细时间分层筛选　日期时间用分层筛选
+    search_fields = ['content']  # 搜索字段 标题等文本字段用搜索框
 
 
+# 二手市场 图片
 @admin.register(SecondImg)
 class SecondImgAdmin(admin.ModelAdmin):
 
@@ -31,20 +32,20 @@ class SecondImgAdmin(admin.ModelAdmin):
     list_display = ['id','qiniu_img','local_img','second','create_datetime']
 
     # 每页显示条数
-    list_per_page = 100
+    list_per_page = 50
 
     # id 排序
     ordering = ['-id']
 
 
-
+# 二手市场 评论
 @admin.register(SecondComment)
 class SecondCommentAdmin(admin.ModelAdmin):
     # 显示的字段
     list_display = ['id', 'content','comment_date', 'comment_time', 'is_show', 'replay_num', 'user', 'second']
 
     # 每页显示条数
-    list_per_page = 100
+    list_per_page = 50
 
     # id 排序
     ordering = ['-id']
@@ -58,13 +59,14 @@ class SecondCommentAdmin(admin.ModelAdmin):
     # date_hierarchy = 'publish_date'  # 详细时间分层筛选　日期时间用分层筛选
 
 
+# 二手市场 评论回复
 @admin.register(SecondReplyComment)
 class SecondReplyCommentAdmin(admin.ModelAdmin):
     # 显示的字段
     list_display = ['id', 'content', 'comment_date', 'comment_time', 'user', 'second', 'comment', 'parent']
 
     # 每页显示条数
-    list_per_page = 100
+    list_per_page = 50
 
     # id 排序
     ordering = ['-id']
@@ -76,13 +78,14 @@ class SecondReplyCommentAdmin(admin.ModelAdmin):
     # date_hierarchy = 'publish_date'  # 详细时间分层筛选　日期时间用分层筛选
 
 
+# 二手市场 举报
 @admin.register(SecondReport)
 class SecondReportAdmin(admin.ModelAdmin):
     # 显示的字段
     list_display = ['id', 'second', 'user', 'publish_datetime']
 
     # 每页显示条数
-    list_per_page = 100
+    list_per_page = 50
 
     # id 排序
     ordering = ['-id']

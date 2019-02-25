@@ -2,8 +2,9 @@ from django.contrib import admin
 from activity.models import Activity,ActivityComment
 
 
+# 校园活动admin
 @admin.register(Activity)
-class Activity(admin.ModelAdmin):
+class ActivityAdmin(admin.ModelAdmin):
 
     # 显示的字段
     list_display = ['id','title','is_first','is_show','short_content','editor','view_num','school','publish_date','create_date']
@@ -22,14 +23,15 @@ class Activity(admin.ModelAdmin):
     search_fields = ['title', 'school']  # 搜索字段 标题等文本字段用搜索框
 
 
+# 校园活动评论admin
 @admin.register(ActivityComment)
-class Activity_comment(admin.ModelAdmin):
+class ActivityCommentAdmin(admin.ModelAdmin):
 
     # 显示的字段
     list_display = ['id','content','commentator','activity','comment_date']
 
     # 每页显示条数
-    list_per_page = 100
+    list_per_page = 50
 
     # id 正序
     ordering = ['-id']

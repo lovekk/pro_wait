@@ -1,6 +1,7 @@
 from django.db import models
 
 
+# 帮助 help
 class Help(models.Model):
     content = models.CharField(max_length=500, verbose_name="help内容", default="")
     publish_date = models.DateField(auto_now_add=True, verbose_name="发布日期")
@@ -26,7 +27,7 @@ class Help(models.Model):
         verbose_name_plural = verbose_name
 
 
-# 接单表
+# 帮助 接单表
 class HelpOrder(models.Model):
     order_date = models.DateField(auto_now_add=True, verbose_name="接单日期")
     order_time = models.TimeField(auto_now_add=True, verbose_name="接单时间")
@@ -41,7 +42,7 @@ class HelpOrder(models.Model):
         verbose_name_plural = verbose_name
 
 
-# 图片表
+# 帮助 图片表
 class HelpImage(models.Model):
     qiniu_img = models.CharField(max_length=100, verbose_name="七牛云地址", default="")
     local_img = models.ImageField(verbose_name="本地地址",upload_to='myhelp/%Y/%m/%d',default="")
@@ -55,7 +56,7 @@ class HelpImage(models.Model):
         verbose_name_plural = verbose_name
 
 
-# 评论表
+# 帮助 评论表
 class HelpComment(models.Model):
     show_choices = (
         (0, '未删除'),
@@ -78,7 +79,7 @@ class HelpComment(models.Model):
         verbose_name_plural = verbose_name
 
 
-# 评论 图片表
+# 帮助 评论 图片表
 class HelpCommentImage(models.Model):
     qiniu_img = models.CharField(max_length=100, verbose_name="七牛云地址", default="")
     local_img = models.ImageField(verbose_name="本地地址", upload_to='myhelp_comment_img/%Y/%m/%d', default="")
@@ -92,11 +93,10 @@ class HelpCommentImage(models.Model):
         verbose_name_plural = verbose_name
 
 
-
-# 评论回复表 二级评论
+# 帮助 评论回复表 二级评论
 class HelpReplyComment(models.Model):
 
-    content = models.CharField(max_length=120,verbose_name="评论内容",default="")
+    content = models.CharField(max_length=300,verbose_name="评论内容",default="")
     comment_date = models.DateField(auto_now_add=True, verbose_name="回复评论日期")
     comment_time = models.TimeField(auto_now_add=True, verbose_name="回复评论时间")
 
@@ -111,7 +111,7 @@ class HelpReplyComment(models.Model):
         verbose_name_plural = verbose_name
 
 
-# 举报表
+# 帮助 举报表
 class HelpReport(models.Model):
     publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
 

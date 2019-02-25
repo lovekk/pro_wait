@@ -5,6 +5,7 @@ from django.db import connection
 from django.views.generic import View
 
 from user.models import User, School, Follow, FunctionModule, AboutWe,AboutWeComment,RecoveryPerson, Login,Cj
+from user.models import IntegralGoods,IntegralOrder
 from myhelp.models import Help
 from activity.models import Activity
 from article.models import Article
@@ -40,14 +41,11 @@ def login(request):
         obj = list(User.objects.filter(phone_num=phone_num).values('password'))
         if (obj):
             pwd = obj[0].get('password')
-            print(pwd)
-            print(password_md5)
             if str(pwd) == str(password_md5):
                 user_msg = User.objects.filter(phone_num=phone_num).values('id','nick','head_image','head_qn_url','school','school__name','token')
                 data = {}
                 data['code'] = 200
                 data['user_data'] = list(user_msg)
-                print(data)
                 return JsonResponse(data)
             else:
                 return JsonResponse({'errmsg': '密码不正确!'})
@@ -90,12 +88,10 @@ def register_msg(request):
         channel = request.POST.get('channel')        # 下载渠道
 
         head_image = request.FILES.get('head_image')
-        print(head_image)
 
         # 等号+1
         ac_num = list(User.objects.values('account_num').order_by('-id')[0:1])
         account_num = int(ac_num[0].get('account_num')) + 1
-        print(account_num)
 
         # 测试为什么update不行 不能更新图片
         # head_image = request.FILES.get('head_image')
@@ -143,7 +139,6 @@ def register_msg(request):
                 data['code'] = 200
                 data['user_msg'] = list(user_msg)
 
-                print(data)
                 return JsonResponse(data)
         else:
             return JsonResponse({'errmsg': '注册信息不全！'})
@@ -198,6 +193,7 @@ class FunctionModuleView(View):
         else:
             return JsonResponse({'errmsg':'未选择学校'})
 
+
 # ================================================我的 关注 粉丝 积分 主页 修改个人信息================================
 # 我自己的个人主页
 class HomePage(View):
@@ -245,7 +241,6 @@ class HomePage(View):
                 for_one['for_good'] = for_good
                 # 单个 追加
                 all_list.append(copy.deepcopy(for_one))
-                # print(for_one)
 
             data['code'] = 200
             data['num_num'] = list(num_num)
@@ -310,7 +305,6 @@ class HisHomePage(View):
                 for_one['for_good'] = for_good
                 # 单个 追加
                 all_list.append(copy.deepcopy(for_one))
-                # print(for_one)
 
             # 查看是否关注
             if user_id == my_id:
@@ -332,7 +326,7 @@ class HisHomePage(View):
             return JsonResponse({"errmsg": "改用户不存在"})
 
 
-#我的关注
+# 我的关注
 class MyFollow(View):
     def get(self,request):
         user_id = request.GET.get('user_id')
@@ -354,7 +348,6 @@ class MyFollow(View):
             follows = list(Follow.objects.filter(user=user_id,is_delete=0).values('follow_id').order_by('-id'))
             # 追加到一个列表里面
             for item in follows:
-                print(item)
                 one_id = item['follow_id']
                 follow_u_id.append(one_id)
             # 用户id 在这个列表里
@@ -420,7 +413,6 @@ class UpdateUserInfoView(View):
             my_sign = request.POST.get('my_sign')
 
             User.objects.filter(id=user_id).update(nick=nick,password=password,head_image=head_image,my_sign=my_sign)
-
         else:
             return JsonResponse({'errmsg':'该用户不存在'})
 
@@ -436,7 +428,6 @@ class UpdateUserHeadView(View):
             my_sign = request.POST.get('my_sign')
 
             User.objects.filter(id=user_id).update(nick=nick,password=password,head_image=head_image,my_sign=my_sign)
-
         else:
             return JsonResponse({'errmsg':'该用户不存在'})
 
@@ -515,24 +506,36 @@ class LoginView(View):
         else:
             return JsonResponse({'errmsg':'未接收到数据！'})
 
-# 忘记密码
+
+# 忘记密码  验证是否注册
+def change_password(request):
+    if request.method == 'POST':
+        phone_num = request.POST.get('phone_num')
+
+        is_have = User.objects.filter(phone_num=phone_num).exists()
+        if is_have:
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'errmsg': '此手机号尚未注册，可以直接注册!'})
+    else:
+        return JsonResponse({'errmsg': '请求发生错误!'})
+
+
+# 忘记密码 修改密码
 class ForgetPwd(View):
     def post(self,request):
-        # user_id = request.POST.get('user_id')
         phone_num = request.POST.get('phone_num')  # 手机号
         password = request.POST.get('password')  # 新密码
-        re_password = request.POST.get('password') # 确认新密码
 
-        if phone_num and password and re_password:
+        if phone_num and password:
             is_have = User.objects.filter(phone_num=phone_num).exists()
             if is_have:
-                if password == re_password:
-                    User.objects.filter(phone_num=phone_num).update(password=password)
-                else:
-                    return JsonResponse({'errmsg':'两次密码输入不一致！'})
+                pwd_md5 = hashlib.md5(password.encode(encoding='UTF-8')).hexdigest()
+                User.objects.filter(phone_num=phone_num).update(password=pwd_md5)
+
+                return JsonResponse({'code': 200})
             else:
                 return JsonResponse({'errmsg':'手机号未注册！'})
-            return JsonResponse({'code': 200})
         else:
             return JsonResponse({'errmsg':'未接收到数据！'})
 
@@ -652,5 +655,47 @@ def getCodeImage(request):
         school_id = request.GET.get('school_id')
         module = getModule(school_id)
         code_img = module.getcode()
-        print(code_img)
         return JsonResponse({"code_img": str(code_img)})
+
+
+# =====================================用户积分兑换=======================================
+# 商品展示  2019/2/19
+class UserGoods(View):
+    def get(self, request):
+        goods = IntegralGoods.objects.values()
+
+        if goods:
+            data = {}
+            data['code'] = 200
+            data['goods'] = list(goods)
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'errmsg': '请求发生错误'})
+
+
+# 保存订单  2019/2/19
+class UserOrder(View):
+    def post(self,request):
+        user_id = request.POST.get('user_id')
+        good_id = request.POST.get('good_id')
+        phone_num = request.POST.get('phone_num')
+        address = request.POST.get('address')
+        which_school = request.POST.get('which_school')
+
+        if user_id and good_id and address:
+            user_ins = User.objects.get(id=user_id)
+            good_ins = IntegralGoods.objects.get(id=good_id)
+
+            IntegralOrder.objects.create(phone_num=phone_num, address=address, which_school=which_school, user=user_ins,
+                                         good=good_ins)
+            # 更新积分，总积分-商品积分
+            good_price = good_ins.price
+            user_price = user_ins.integral
+            if user_price >= good_price:
+                integral = user_price - good_price
+                User.objects.filter(id=user_id).update(integral=integral)
+                return JsonResponse({'code': 200})
+            else:
+                return JsonResponse({'errmsg' : '积分不够！'})
+        else:
+            return JsonResponse({'errmsg': '未接收到数据！'})

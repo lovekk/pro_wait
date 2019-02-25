@@ -9,6 +9,7 @@ from pro_wait.settings import MEDIA_ROOT
 
 from second.models import Second, SecondImg, SecondComment, SecondReplyComment, SecondReport
 from user.models import User, School
+from moment.models import Push
 
 import copy
 
@@ -62,7 +63,6 @@ class IndexView(View):
                 for_all['for_img'] = for_img
 
                 all_list.append(copy.deepcopy(for_all))
-                # print(for_all)
 
             data['code'] = 200
             data['text_list'] = all_list
@@ -72,13 +72,12 @@ class IndexView(View):
             return JsonResponse({'errmsg': '尚未选择学校'})
 
 
-# 添加 发布 校园二手
+# 校园二手 添加 发布
 class AddView(View):
     def post(self, request):
         # 获取ajax数据
         school_id = request.POST.get('school_id')
         creator_id = request.POST.get('creator_id')
-        # content = request.POST.get('content').replace("\n","</br>")  # 没法换行
         content = request.POST.get('content')
         price = int(request.POST.get('price'))
         is_type = int(request.POST.get('is_type'))
@@ -112,7 +111,7 @@ class AddView(View):
             return JsonResponse({'errmsg': '尚未选择学校'})
 
 
-# 二手 详情
+# 校园二手 详情
 class SecondDetailView(View):
     def get(self,request):
         second_id = request.GET.get('second_id')
@@ -185,7 +184,7 @@ class SecondDetailView(View):
             return JsonResponse({'errmsg': '请求发生错误'})
 
 
-# 添加 一级评论
+# 校园二手 添加 一级评论
 class AddCommentView(View):
     def post(self, request):
         second_id = request.POST.get('second_id')
@@ -198,12 +197,18 @@ class AddCommentView(View):
             second_ins = Second.objects.get(id=second_id)
             SecondComment.objects.create(content=content, user=user_ins, second=second_ins )
 
+            # 发布该二手的人的id 2019/2/24
+            publisher_id = second_ins.creator_id
+            # 保存信息到推送表里 2019/2/24
+            Push.objects.create(push_content=content, push_type=2, publish_id=second_id, publisher_id=publisher_id,
+                                commentator=user_ins)
+
             return JsonResponse({'msg':'数据未保存成功！'})
         else:
             return JsonResponse({'msg': '数据未保存成功！'})
 
 
-# 添加 二级评论
+# 校园二手 添加 二级评论
 class ReplyCommentView(View):
     def post(self,request):
         comment_id = request.POST.get('comment_id')
@@ -243,15 +248,15 @@ class SecondReportView(View):
         u_id = request.GET.get('u_id')
 
         if second_id and u_id:
-            is_have = SecondReport.objects.filter(second=second_id,user=u_id).exists()
-            # 是否存在
-            if is_have :
-                return JsonResponse({'msg': '已经举报过了'})
-            else:
-                # 举报 入表
-                user_ins = User.objects.get(id=u_id)
-                second_ins = Second.objects.get(id=second_id)
-                SecondReport.objects.create(second=second_ins,user=user_ins)
-                return JsonResponse({'code': 200})
+            # is_have = SecondReport.objects.filter(second=second_id,user=u_id).exists()
+            # # 是否存在
+            # if is_have :
+            #     return JsonResponse({'msg': '已经举报过了'})
+
+            # 举报 入表
+            user_ins = User.objects.get(id=u_id)
+            second_ins = Second.objects.get(id=second_id)
+            SecondReport.objects.create(second=second_ins,user=user_ins)
+            return JsonResponse({'code': 200})
         else:
-            return JsonResponse({'errmsg': '尚未选择学校'})
+            return JsonResponse({'msg': '已经举报过了'})

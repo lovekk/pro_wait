@@ -2,8 +2,9 @@ from django.contrib import admin
 from notice.models import Notice
 
 
+# 公告admin
 @admin.register(Notice)
-class Notice(admin.ModelAdmin):
+class NoticeAdmin(admin.ModelAdmin):
 
     # 显示的字段
     list_display = ['id','title','short_content','sort_num','is_show','editor','publish_date','view_num','school']

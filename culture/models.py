@@ -26,7 +26,6 @@ class Culture(models.Model):
     def __str__(self):
         return self.title
 
-
     # 指定字段内容长度，超出部分。。。代替
     def short_introduction(self):
         if len(str(self.introduction)) > 200:
@@ -35,7 +34,6 @@ class Culture(models.Model):
             return str(self.introduction)
     short_introduction.allow_tags = True
     short_introduction.short_description = u"文化简介"
-
 
     # 指定字段内容长度，超出部分。。。代替
     def short_content(self):

@@ -10,7 +10,7 @@ def culture_content(request):
     if request.method == 'GET':
         school_id = request.GET.get('school_id')
         skip = int(request.GET.get('skip'))
-        end_skip = skip + 20
+        end_skip = skip + 20  # 分页
 
         if school_id:
             # 浏览 +1

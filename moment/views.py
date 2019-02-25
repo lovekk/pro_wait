@@ -1,4 +1,3 @@
-
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST,require_GET
 from django.views.generic import View
@@ -6,12 +5,11 @@ from django.db.models import Count, F
 
 from utils.qiniu_upload import qi_local_upload, qi_upload
 from pro_wait.settings import MEDIA_ROOT
+import copy
 
-from moment.models import Moment, Video, Image, Voice, Tag, Good, Report
+from moment.models import Moment, Video, Image, Voice, Tag, Good, Report,Push
 from moment.models import Comment, ReplyComment, CommentGood, CommentImage, CommentVideo, CommentVoice
 from user.models import User, School, Follow
-
-import copy
 
 # Create your views here.
 
@@ -62,11 +60,9 @@ class IndexView(View):
             data = {}
             for_one = {}  # 单次数据
             all_list = []  # 总数据
-            print(moments_first)
 
             # 遍历id
             for item in list(moments_first):
-                # print(item.get('id'))  # {'id': 43}
                 item_id = item.get('id')
 
                 # 浏览 +1
@@ -97,7 +93,6 @@ class IndexView(View):
                 for_one['for_good'] = for_good
                 # 单个 追加
                 all_list.append(copy.deepcopy(for_one))
-                # print(for_one)
 
             data['code'] = 200
             data['all_list'] = all_list
@@ -354,7 +349,6 @@ class AddCommentView(View):
         commentator_id = request.POST.get('user_id')
         content = request.POST.get('content')
         his_id = request.POST.get('his_id')
-
         # 获取图片
         local_image = request.FILES.getlist('img_list')
         # 获取音频
@@ -363,10 +357,17 @@ class AddCommentView(View):
         # 视频
         local_video = request.FILES.get('video_url')
         video_size = request.POST.get('video_size')  # 视频大小
-
         if moment_id and commentator_id:
             user_ins = User.objects.get(id=commentator_id)
+            print(user_ins)
             moment_ins = Moment.objects.get(id=moment_id)
+
+            # 先存到推送
+            # 发布该说说的人的id 2019/2/24  他的id
+            publisher_id = moment_ins.user_id
+            # 保存信息到推送表里 2019/2/24
+            Push.objects.create(push_content=content, push_type=0, publish_id=moment_id,
+                                publisher_id=publisher_id, commentator=user_ins)
 
             # 只有文本
             comment_create = Comment.objects.create(content=content, user=user_ins, moment=moment_ins)
@@ -445,13 +446,26 @@ class ReplyCommentView(View):
         comment_ins = Comment.objects.get(id=comment_id)
         moment_ins = Moment.objects.get(id=moment_id)
 
+        # 一级评论者 接收回复的用户的id
+        publisher_id = comment_ins.user_id
+
         # 如果是 回复的回复
         if reply_id :
             comment_reply_ins = ReplyComment.objects.get(id=reply_id)
             reply_comment = ReplyComment.objects.create(content=reply_content, user=user_ins, moment=moment_ins,
                                                         comment=comment_ins,parent=comment_reply_ins)
+            # 推送 评论 入表
+            # publisher_id ===》发布者，接收评论的人
+            # commentator ==》这一次做评论的人
+            comment_reply_user_id = comment_reply_ins.user_id
+            # 保存信息到推送表里 三级评论 2019/2/24
+            Push.objects.create(push_content=reply_content, push_type=0, publish_id=moment_id,
+                                publisher_id=comment_reply_user_id, commentator=user_ins)
         else:
             reply_comment = ReplyComment.objects.create(content=reply_content,user=user_ins,moment=moment_ins,comment=comment_ins)
+            # 保存信息到推送表里 二级评论 2019/2/24
+            Push.objects.create(push_content=reply_content, push_type=0, publish_id=moment_id,
+                                publisher_id=publisher_id, commentator=user_ins)
 
         if reply_comment:
             # 回复数量+1
@@ -523,8 +537,6 @@ class ReplyCommentDetailView(View):
 
 
 # =================================================发现·其他===========================================
-# 我的关注的发现
-
 
 # 获取话题标签
 class TagView(View):
@@ -543,11 +555,6 @@ class CreateFollow(View):
         follow_id = request.GET.get('his_id')
 
         if user_id and follow_id:
-            # is_follow = Follow.objects.filter(follow_id=follow_id, user=user_id, is_delete=0).exists()
-            #
-            # if is_follow:
-            #     # 已经关注了
-            #     return JsonResponse({"code": 201})
 
             # 添加关注
             user_ins = User.objects.get(id=user_id)
@@ -561,7 +568,6 @@ class CreateFollow(View):
             his_ins = User.objects.get(id=follow_id)
             fans_total = his_ins.fans_total + 1
             User.objects.filter(id=follow_id).update(fans_total=fans_total)
-
 
             return JsonResponse({"code": 200})
         else:
@@ -615,7 +621,6 @@ class SearchView(View):
 
             # 遍历id
             for item in list(moments_first):
-                # print(item.get('id'))  # {'id': 43}
                 item_id = item.get('id')
                 # 浏览 +1
                 look_this = Moment.objects.get(id=item_id)
@@ -648,7 +653,6 @@ class SearchView(View):
                 for_one['for_good'] = for_good
                 # 单个 追加
                 all_list.append(copy.deepcopy(for_one))
-                # print(for_one)
 
             data['code'] = 200
             data['user_list'] = list(user)
@@ -659,10 +663,28 @@ class SearchView(View):
             return JsonResponse({"errmsg":"未选择学校或者未接收到关键字参数"})
 
 
+# 评论推送，通知 2019/2/23
+class PushView(View):
+    def get(self,request):
+        user_id = request.GET.get('user_id')
+        skip = int(request.GET.get('skip'))
+        skip_end = skip + 10
+        data = {}
+        if user_id:
+            push = Push.objects.filter(publisher_id=user_id).values(
+                'push_content',
+                'push_type',
+                'publish_id',
+                'comment_date',
+                'comment_time',
+                u_id=F('commentator__id'),
+                u_nick=F('commentator__nick'),
+                u_school=F('commentator__school_name'),
+                u_img=F('commentator__head_qn_url')
+            ).order_by('-id')[skip:skip_end]
 
-
-
-
-
-
-
+            data['code'] = 200
+            data['push_data'] = list(push)
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'errmsg': '没接收到数据！'})
