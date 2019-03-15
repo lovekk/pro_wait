@@ -123,7 +123,9 @@ def register_msg(request):
                 device_name=device_name,
                 operator=operator,
                 head_image=head_image,
-                reg_ip=reg_ip
+                reg_ip=reg_ip,
+                system_type=system_type,
+                channel=channel,
             )
             data = {}
             if user_create:
@@ -330,6 +332,9 @@ class HisHomePage(View):
 class MyFollow(View):
     def get(self,request):
         user_id = request.GET.get('user_id')
+        skip = int(request.GET.get('skip'))  # 分页
+        end_skip = skip + 20
+
         if user_id:
             # 查询出所有的关注
             data = {}
@@ -345,7 +350,7 @@ class MyFollow(View):
 
             follow_u_id = []
             # 找到所有follow_id
-            follows = list(Follow.objects.filter(user=user_id,is_delete=0).values('follow_id').order_by('-id'))
+            follows = list(Follow.objects.filter(user=user_id,is_delete=0).values('follow_id').order_by('-id'))[skip:end_skip]
             # 追加到一个列表里面
             for item in follows:
                 one_id = item['follow_id']
@@ -365,13 +370,15 @@ class MyFollow(View):
 class MyFans(View):
     def get(self,request):
         user_id = request.GET.get('user_id')
+        skip = int(request.GET.get('skip'))  # 分页
+        end_skip = skip + 20
         if user_id:
             fans = Follow.objects.filter(follow_id=user_id,is_delete=0).values(
                 u_id = F('user__id'),
                 u_nick = F('user__nick'),
                 u_head_img = F('user__head_qn_url'),
                 u_school_name = F('user__school_name')
-            ).order_by('-id')
+            ).order_by('-id')[skip:end_skip]
             data = {}
             data['code'] = 200
             data['fans'] = list(fans)
@@ -393,7 +400,8 @@ class MyNum(View):
             # # 关注数量数
             # follow_num = Follow.objects.filter(user=user_id,is_delete=0).aggregate(Count('follow_id'))
 
-            my_num = User.objects.filter(id=user_id).values('head_qn_url','nick','school_name','integral','fans_total','create_total')
+            my_num = User.objects.filter(id=user_id).values('head_qn_url','nick','gender','school_name','my_sign',
+                                                            'integral','fans_total','create_total')
             data = {}
             data['code'] = 200
             data['my_num'] = list(my_num)
@@ -402,32 +410,66 @@ class MyNum(View):
             return JsonResponse({"errmsg": "改用户不存在"})
 
 
-# 更新个人信息
-class UpdateUserInfoView(View):
+# ================================================修改个人信息=============================================
+# 更新个人信息 个性签名
+class UpdateMySign(View):
     def post(self,request):
-        user_id = request.POST.get('user_id')
-        if user_id:
-            nick = request.POST.get('nick')
-            password = request.POST.get('password')
-            head_image = request.FILES.get('head_image')
-            my_sign = request.POST.get('my_sign')
+        my_id = request.POST.get('my_id')
+        my_sign = request.POST.get('my_sign')
+        if my_id:
+            User.objects.filter(id=my_id).update(my_sign=my_sign)
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'errmsg':'该用户不存在'})
 
-            User.objects.filter(id=user_id).update(nick=nick,password=password,head_image=head_image,my_sign=my_sign)
+
+# 更新个人信息 学校
+class UpdateMySchool(View):
+    def post(self,request):
+        my_id = request.POST.get('my_id')
+        my_school = request.POST.get('my_school')
+        if my_id and my_school:
+            User.objects.filter(id=my_id).update(school_name = my_school)
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'errmsg':'该用户不存在'})
+
+
+# 更新个人信息 昵称 ====没做
+class UpdateMyNick(View):
+    def post(self,request):
+        my_id = request.POST.get('my_id')
+        my_nick = request.POST.get('my_nick')
+        if my_id and my_nick:
+            User.objects.filter(id=my_id).update(nick = my_nick)
+            return JsonResponse({'code': 200})
         else:
             return JsonResponse({'errmsg':'该用户不存在'})
 
 
 # 更新个人信息 头像
-class UpdateUserHeadView(View):
+class UpdateMyHead(View):
     def post(self,request):
         user_id = request.POST.get('user_id')
-        if user_id:
-            nick = request.POST.get('nick')
-            password = request.POST.get('password')
-            head_image = request.FILES.get('head_image')
-            my_sign = request.POST.get('my_sign')
+        head_image = request.FILES.get('head_image')
+        if user_id and head_image:
+            # 修改本地图片
+            pic = User.objects.get(id=user_id)
+            pic.head_image = head_image
+            pic.save()
 
-            User.objects.filter(id=user_id).update(nick=nick,password=password,head_image=head_image,my_sign=my_sign)
+            # 先保存到本地 不保存七牛 因为直接用七牛的put_data提示报错 期望不是InMemoryUploadedFile类型
+            # 下面做七牛保存
+            user_local_img = str(MEDIA_ROOT) + '/' + str(pic.head_image)  # 拼接本地绝对路径
+            qi_local_img = qi_local_upload(user_local_img)  # 七牛上传
+            User.objects.filter(id=user_id).update(head_qn_url=qi_local_img)  # 更新七牛数据
+            my_msg = User.objects.filter(id=user_id).values('nick','head_qn_url')
+
+            data = {}
+            data['code'] = 200
+            data['my_msg'] = list(my_msg)
+
+            return JsonResponse(data)
         else:
             return JsonResponse({'errmsg':'该用户不存在'})
 
@@ -500,7 +542,7 @@ class LoginView(View):
         save_login = Login.objects.create(phone_num=phone_num, password=password, log_ip=log_ip,device_model=device_model,
                                           device_num=device_num, device_name=device_name,operator=operator,
                                           system_type=system_type,system_version=system_version,connection_type=connection_type,
-                                          screen_width=screen_width,screen_height=screen_height,jail_break=jail_break,user=user)
+                                          screen_width=screen_width,screen_height=screen_height,channel=channel,jail_break=jail_break,user=user)
         if save_login :
             return JsonResponse({'code': 200})
         else:
@@ -686,13 +728,14 @@ class UserOrder(View):
             user_ins = User.objects.get(id=user_id)
             good_ins = IntegralGoods.objects.get(id=good_id)
 
-            IntegralOrder.objects.create(phone_num=phone_num, address=address, which_school=which_school, user=user_ins,
-                                         good=good_ins)
             # 更新积分，总积分-商品积分
             good_price = good_ins.price
             user_price = user_ins.integral
+
             if user_price >= good_price:
                 integral = user_price - good_price
+                IntegralOrder.objects.create(phone_num=phone_num, address=address, which_school=which_school,
+                                             user=user_ins,good=good_ins)
                 User.objects.filter(id=user_id).update(integral=integral)
                 return JsonResponse({'code': 200})
             else:

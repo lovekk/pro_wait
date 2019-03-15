@@ -179,9 +179,10 @@ class AddHelpView(View):
             help_create = Help.objects.create(content=content,price=price,is_online=is_online,
                                                       is_all_school=is_all_school,user=user,school=school)
             # 说说发表数量 +1
-            help_this = User.objects.get(id=user_id)
-            help_total = help_this.help_total + 1
-            User.objects.filter(id=user_id).update(help_total=help_total)
+            help_total = user.help_total + 1
+            # 用户增加 2积分
+            integral = user.integral + 2
+            User.objects.filter(id=user_id).update(help_total=help_total,integral=integral)
 
             if help_create:
                 for img in img_list:
@@ -212,12 +213,18 @@ class ToHelpView(View):
         if helper_id and help_id:
             # 将订单状态改成已接单
             help_ins = Help.objects.get(id=help_id)
+            helper_ins = User.objects.get(id=helper_id)
             if help_ins.status == 0:
-                helper_ins = User.objects.get(id=helper_id)
-                Help.objects.filter(id=help_id).update(status=1)  # 更新为接单
+
                 # 创建接单信息
-                order_create = HelpOrder.objects.create(user=helper_ins, myhelp=help_ins)
+                order_create = HelpOrder.objects.create(is_you=0,user=helper_ins, myhelp=help_ins)
+
                 if order_create:
+                    Help.objects.filter(id=help_id).update(status=1)  # 更新为接单
+                    # 用户增加 1积分
+                    integral = helper_ins.integral + 1
+                    User.objects.filter(id=helper_id).update(integral=integral)
+
                     return JsonResponse({'code': 200})
             else:
                 return JsonResponse({'errmsg': '对不起，此单已被接！'})

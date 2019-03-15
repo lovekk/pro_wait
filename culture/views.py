@@ -25,6 +25,7 @@ def culture_content(request):
             comment = CultureComment.objects.filter(culture__title=culture_title,is_show=0).values(
                 'content',
                 'create_date',
+                u_id=F('commentator__id'),
                 u_nick=F('commentator__nick'),
                 u_img=F('commentator__head_qn_url'),
             ).order_by('-id')[skip:end_skip]

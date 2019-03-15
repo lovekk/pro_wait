@@ -54,6 +54,7 @@ def activity_detail(request):
                 'commentator',
                 'content',
                 'comment_date',
+                c_id = F('commentator__id'),
                 c_nick = F('commentator__nick'),
                 c_head = F('commentator__head_image')
             ).order_by('-id')[skip:end_skip]

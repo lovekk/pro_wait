@@ -55,7 +55,7 @@ class IndexView(View):
                 for item in follows:
                     one_id = item['follow_id']
                     follow_u_id.append(one_id)
-                moments_first = Moment.objects.filter(user__in=follow_u_id, is_show=0).values('id').order_by('-publish_date','-id')[skip:end_skip]
+                moments_first = Moment.objects.filter(user__in=follow_u_id, is_show=0).exclude(tag='匿名树洞').values('id').order_by('-publish_date','-id')[skip:end_skip]
 
             data = {}
             for_one = {}  # 单次数据
@@ -110,7 +110,6 @@ class AddView(View):
         creator_id = request.POST.get('creator_id')
         content = request.POST.get('content')
         tag = request.POST.get('tag')
-
         voice_time = request.POST.get('voice_time')    # 语音时长 S
         video_size = request.POST.get('video_size')    # 视频大小 M
 
@@ -125,10 +124,12 @@ class AddView(View):
             school_ins = School.objects.get(id=school_id)
             moment_create = Moment.objects.create(content=content, tag=tag, school=school_ins, user=user_ins)
 
-            # 说说发表数量 +1
             find_this = User.objects.get(id=creator_id)
+            # 说说发表数量 +1
             find_total = find_this.find_total + 1
-            User.objects.filter(id=creator_id).update(find_total=find_total)
+            # 用户增加 1积分
+            integral = find_this.integral + 1
+            User.objects.filter(id=creator_id).update(find_total=find_total,integral=integral)
 
             # 保存 外键的 图片数据
             # 这一块 写的 绝望  这次再看看 还好 总感觉不是最优写法
@@ -216,6 +217,7 @@ class MomentDetailView(View):
                 'comment_time',
                 'good_num',
                 'replay_num',
+                c_id=F('user__id'),
                 c_nick=F('user__nick'),
                 c_head=F('user__head_qn_url')
             ).order_by('-id')

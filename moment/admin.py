@@ -7,11 +7,11 @@ from moment.models import CommentImage, CommentVoice, CommentVideo, Push
 class MomentAdmin(admin.ModelAdmin):
 
     # 显示的字段
-    list_display = ['id', 'content', 'tag', 'good_num', 'comment_num', 'view_num', 'relay_num', 'report_num', 'is_first',
-                    'is_show', 'publish_date', 'publish_time', 'school', 'user']
+    list_display = ['id', 'content', 'tag', 'user', 'school','is_show', 'good_num', 'comment_num', 'view_num', 'relay_num',
+                    'report_num', 'is_first', 'publish_date', 'publish_time']
 
     # 每页显示条数
-    list_per_page = 20
+    list_per_page = 50
 
     # id 排序
     ordering = ['-id']
