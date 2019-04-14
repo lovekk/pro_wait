@@ -105,12 +105,23 @@ class SecondReplyComment(models.Model):
 # 二手市场 举报表
 class SecondReport(models.Model):
     publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
-
-    second = models.ForeignKey('second',verbose_name='二手id',on_delete=models.CASCADE, null=True)
+    second = models.ForeignKey('Second',verbose_name='二手id',on_delete=models.CASCADE, null=True)
     user = models.ForeignKey('user.User', verbose_name='用户id', on_delete=models.CASCADE, null=True)
 
     class Meta:
         db_table = 'dn_second_report'
         verbose_name = "校园二手·举报"
+        verbose_name_plural = verbose_name
+
+
+# 屏蔽二手市场表
+class RefuseSecond(models.Model):
+    second = models.ForeignKey('Second',verbose_name='二手id',on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey('user.User', verbose_name='用户id', on_delete=models.CASCADE, null=True)
+    publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
+
+    class Meta:
+        db_table = 'dn_second_refuse'
+        verbose_name = "校园二手·屏蔽"
         verbose_name_plural = verbose_name
 

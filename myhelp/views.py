@@ -3,8 +3,8 @@ from django.http import JsonResponse
 from django.db.models import Count, F
 
 from user.models import User, School
-from moment.models import Push
-from myhelp.models import Help, HelpOrder, HelpImage, HelpReport, HelpComment, HelpReplyComment, HelpCommentImage
+from moment.models import Push,RefuseUser
+from myhelp.models import Help, HelpOrder, HelpImage, HelpReport, HelpComment, HelpReplyComment, HelpCommentImage,RefuseHelp
 
 from utils.qiniu_upload import qi_local_upload, qi_upload
 from pro_wait.settings import MEDIA_ROOT
@@ -19,9 +19,27 @@ class HelpListView(View):
         end_skip = skip + 10
 
         if school_id:
-            # 一对多 反查外键
-            # 先查询 所有id
-            myhelp = Help.objects.filter(school=school_id, is_show=0).values('id').order_by('-id')[skip:end_skip]
+
+            # 查看是否有屏蔽现象   # 区别安卓 安卓这两个没有参数user_id
+            refuse_help_id_list = []
+            refuse_user_id_list = []
+            if request.GET.get('user_id'):
+                user_id = request.GET.get('user_id')
+                refuse_help_id = list(RefuseHelp.objects.filter(user=user_id).values('myhelp'))
+                for re in refuse_help_id:
+                    refuse_help_id_list.append(re['myhelp'])
+
+                # 查看是否屏蔽用户
+                refuse_user_id = list(RefuseUser.objects.filter(my_id=user_id).values('his_id'))
+                for re in refuse_user_id:
+                    refuse_user_id_list.append(re['his_id'])
+                # 一对多 反查外键
+                # 先查询 所有id
+                myhelp = Help.objects.filter(school=school_id, is_show=0).exclude(user__in=refuse_user_id_list).values('id').order_by('-id')[skip:end_skip]
+            else:
+                # 一对多 反查外键
+                # 先查询 所有id
+                myhelp = Help.objects.filter(school=school_id, is_show=0).values('id').order_by('-id')[skip:end_skip]
 
             data = {}
             for_one = {}  # 单次数据
@@ -29,19 +47,23 @@ class HelpListView(View):
             # 遍历id
             for item in list(myhelp):
                 item_id = item.get('id')
-                # 查发布内容
-                for_t = Help.objects.filter(id=item_id).values(
-                    'id', 'content', 'publish_date', 'publish_time','price','is_online','is_all_school','is_show','status',
-                    u_nick=F('user__nick'), u_img=F('user__head_qn_url'), u_id=F('user__id'))
+                if item_id in refuse_help_id_list:
+                    # 跳过此说说
+                    continue
+                else:
+                    # 查发布内容
+                    for_t = Help.objects.filter(id=item_id).values(
+                        'id', 'content', 'publish_date', 'publish_time','price','is_online','is_all_school','is_show','status',
+                        u_nick=F('user__nick'), u_img=F('user__head_qn_url'), u_id=F('user__id'))
 
-                for_text = list(for_t)
-                # 查发布图片
-                for_img = list(HelpImage.objects.filter(myhelp=item_id).values('id', 'qiniu_img', 'myhelp'))
+                    for_text = list(for_t)
+                    # 查发布图片
+                    for_img = list(HelpImage.objects.filter(myhelp=item_id).values('id', 'qiniu_img', 'myhelp'))
 
-                for_one['id'] = item_id
-                for_one['for_text'] = for_text
-                for_one['for_img'] = for_img
-                all_list.append(copy.deepcopy(for_one))
+                    for_one['id'] = item_id
+                    for_one['for_text'] = for_text
+                    for_one['for_img'] = for_img
+                    all_list.append(copy.deepcopy(for_one))
 
             data['code'] = 200
             data['all_list'] = all_list
@@ -468,6 +490,25 @@ class HelpReportView(View):
             return JsonResponse({'code': 200})
         else:
             return JsonResponse({'msg': '已经举报过了！'})
+
+
+# 屏蔽此条help
+class RefuseHelpView(View):
+    def get(self, request):
+
+        help_id = request.GET.get('help_id')
+        u_id = request.GET.get('u_id')
+        if help_id and u_id:
+
+            # 屏蔽此条说说 入表
+            user_ins = User.objects.get(id=u_id)
+            help_ins = Help.objects.get(id=help_id)
+            RefuseHelp.objects.create(myhelp=help_ins,user=user_ins)
+
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'errmsg': '屏蔽失败'})
+
 
 
 # ===============================统计======我发布的=====我接单的==========================

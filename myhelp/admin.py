@@ -1,5 +1,5 @@
 from django.contrib import admin
-from myhelp.models import Help, HelpOrder, HelpImage, HelpReport, HelpComment, HelpReplyComment, HelpCommentImage
+from myhelp.models import Help, HelpOrder, HelpImage, HelpReport, HelpComment, HelpReplyComment, HelpCommentImage,RefuseHelp
 
 # help帮助
 @admin.register(Help)
@@ -123,3 +123,16 @@ class HelpCommentImageAdmin(admin.ModelAdmin):
     # id 排序
     ordering = ['-id']
 
+
+
+#  屏蔽
+@admin.register(RefuseHelp)
+class RefuseHelpAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'myhelp', 'user', 'publish_datetime']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']

@@ -34,7 +34,7 @@ class HelpOrder(models.Model):
     is_you = models.SmallIntegerField(default=0, choices=((0, '是你'),(1, '不是你')), verbose_name='是不是你去完成')
 
     user = models.ForeignKey('user.User', verbose_name='接单者', on_delete=models.CASCADE, null=True)
-    myhelp = models.ForeignKey('Help', verbose_name='Help id', on_delete=models.CASCADE, null=True)
+    myhelp = models.ForeignKey('Help', verbose_name='help_id', on_delete=models.CASCADE, null=True)
 
     class Meta:
         db_table = 'dn_help_order'
@@ -48,7 +48,7 @@ class HelpImage(models.Model):
     local_img = models.ImageField(verbose_name="本地地址",upload_to='myhelp/%Y/%m/%d',default="")
     publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
 
-    myhelp = models.ForeignKey('Help', verbose_name='Help_id', on_delete=models.CASCADE, null=True)
+    myhelp = models.ForeignKey('Help', verbose_name='help_id', on_delete=models.CASCADE, null=True)
 
     class Meta:
         db_table = 'dn_help_image'
@@ -68,7 +68,7 @@ class HelpComment(models.Model):
     is_show = models.SmallIntegerField(default=0, choices=show_choices, verbose_name='是否显示')
 
     user = models.ForeignKey('user.User', verbose_name='用户', on_delete=models.CASCADE, null=True)
-    myhelp = models.ForeignKey('Help', verbose_name='Help_id', on_delete=models.CASCADE, null=True)
+    myhelp = models.ForeignKey('Help', verbose_name='help_id', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.content
@@ -101,7 +101,7 @@ class HelpReplyComment(models.Model):
     comment_time = models.TimeField(auto_now_add=True, verbose_name="回复评论时间")
 
     user = models.ForeignKey('user.User', verbose_name='用户', on_delete=models.CASCADE, null=True)
-    myhelp = models.ForeignKey('Help', verbose_name='Help', on_delete=models.CASCADE, null=True)
+    myhelp = models.ForeignKey('Help', verbose_name='help_id', on_delete=models.CASCADE, null=True)
     comment = models.ForeignKey('HelpComment', verbose_name='评论', on_delete=models.CASCADE, null=True)
     parent = models.ForeignKey('self', verbose_name='自关联的父级', on_delete=models.CASCADE, null=True)
 
@@ -115,10 +115,24 @@ class HelpReplyComment(models.Model):
 class HelpReport(models.Model):
     publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
 
-    myhelp = models.ForeignKey('Help',verbose_name='Help_id',on_delete=models.CASCADE, null=True)
+    myhelp = models.ForeignKey('Help',verbose_name='help_id',on_delete=models.CASCADE, null=True)
     user = models.ForeignKey('user.User', verbose_name='用户id', on_delete=models.CASCADE, null=True)
 
     class Meta:
         db_table = 'dn_help_report'
         verbose_name = "help·举报"
         verbose_name_plural = verbose_name
+
+
+# 屏蔽help表
+# help也有屏蔽用户 用户表在moment中
+class RefuseHelp(models.Model):
+    myhelp = models.ForeignKey('Help',verbose_name='help_id',on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey('user.User', verbose_name='用户id', on_delete=models.CASCADE, null=True)
+    publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
+
+    class Meta:
+        db_table = 'dn_help_refuse'
+        verbose_name = "help·屏蔽"
+        verbose_name_plural = verbose_name
+

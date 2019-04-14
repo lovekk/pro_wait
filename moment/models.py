@@ -231,6 +231,30 @@ class Report(models.Model):
         verbose_name_plural = verbose_name
 
 
+# 屏蔽说说表
+class RefuseFind(models.Model):
+    moment = models.ForeignKey('moment',verbose_name='发现id',on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey('user.User', verbose_name='用户id', on_delete=models.CASCADE, null=True)
+    publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
+
+    class Meta:
+        db_table = 'dn_moment_refuse_find'
+        verbose_name = "发现·屏蔽说说"
+        verbose_name_plural = verbose_name
+
+
+# 屏蔽用户表
+class RefuseUser(models.Model):
+    his_id = models.IntegerField(verbose_name='他的id', default=0)
+    my_id = models.ForeignKey('user.User', verbose_name='我的id', on_delete=models.CASCADE, null=True)
+    publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
+
+    class Meta:
+        db_table = 'dn_moment_refuse_user'
+        verbose_name = "发现·屏蔽用户"
+        verbose_name_plural = verbose_name
+
+
 # 推送表 2019/2/24
 class Push(models.Model):
     types = (

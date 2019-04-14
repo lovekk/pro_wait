@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST,require_GET
 from django.db.models import Count, F
 from django.views.generic import View
 
-from lose.models import Lose, LoseImg, LoseComment, LoseReplyComment
+from lose.models import Lose, LoseImg, LoseComment, LoseReplyComment, LoseReport, RefuseLose
 from user.models import User, School
 from moment.models import Push
 
@@ -20,6 +20,16 @@ from pro_wait.settings import MEDIA_ROOT
 def lose_list(request):
     school_id = request.GET.get('school_id')
     skip = int(request.GET.get('skip'))
+
+    # 查看是否有屏蔽现象  # 区别安卓 安卓这两个没有参数user_id
+    refuse_lose_id_list = []
+    if request.GET.get('user_id'):
+        user_id = int(request.GET.get('user_id'))
+        refuse_lose_id = list(RefuseLose.objects.filter(user=user_id).values('lose'))
+        for re in refuse_lose_id:
+            refuse_lose_id_list.append(re['lose'])
+
+    # 查询
     if school_id:
         # 一对多 反查外键
         # 先查询 所有id
@@ -33,20 +43,24 @@ def lose_list(request):
         # 遍历id
         for item in list(loses_first):
             item_id=item.get('id')
-            # 查发布内容
-            for_t = Lose.objects.filter(id=item_id).values('id', 'content', 'good_num', 'create_date', 'create_time',
-                'is_type', 'view_num', u_nick = F('creator__nick'), u_img = F('creator__head_qn_url'),
-                u_id = F('creator__id'), u_token = F('creator__token'))
+            if item_id in refuse_lose_id_list:
+                # 跳过此说说
+                continue
+            else:
+                # 查发布内容
+                for_t = Lose.objects.filter(id=item_id).values('id', 'content', 'good_num', 'create_date', 'create_time',
+                    'is_type', 'view_num', u_nick = F('creator__nick'), u_img = F('creator__head_qn_url'),
+                    u_id = F('creator__id'), u_token = F('creator__token'))
 
-            for_text = list(for_t)
-            # 查发布图片
-            for_img = list(LoseImg.objects.filter(lose=item_id).values('id', 'qiniu_img','lose'))
+                for_text = list(for_t)
+                # 查发布图片
+                for_img = list(LoseImg.objects.filter(lose=item_id).values('id', 'qiniu_img','lose'))
 
-            for_all['id'] = item_id
-            for_all['for_text'] = for_text
-            for_all['for_img'] = for_img
+                for_all['id'] = item_id
+                for_all['for_text'] = for_text
+                for_all['for_img'] = for_img
 
-            all_list.append(copy.deepcopy(for_all))
+                all_list.append(copy.deepcopy(for_all))
 
         data['code'] = 200
         data['show_list'] = all_list
@@ -234,6 +248,39 @@ class ReplyCommentView(View):
             return JsonResponse({'code': 200})
         else:
             return JsonResponse({'errmsg': '数据没有保存成功！'})
+
+
+# 失物招领 举报
+class LoseReportView(View):
+    def get(self, request):
+        lose_id = request.GET.get('lose_id')
+        u_id = request.GET.get('u_id')
+
+        if lose_id and u_id:
+            # 举报 入表
+            user_ins = User.objects.get(id=u_id)
+            lose_ins = Lose.objects.get(id=lose_id)
+            LoseReport.objects.create(lose=lose_ins,user=user_ins)
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'msg': '已经举报过了'})
+
+
+# 失物招领 屏蔽
+class RefuseLoseView(View):
+    def get(self, request):
+        lose_id = request.GET.get('lose_id')
+        u_id = request.GET.get('u_id')
+
+        if lose_id and u_id:
+            # 屏蔽此条说说 入表
+            user_ins = User.objects.get(id=u_id)
+            lose_ins = Lose.objects.get(id=lose_id)
+            RefuseLose.objects.create(lose=lose_ins,user=user_ins)
+
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'errmsg': '屏蔽失败'})
 
 
 

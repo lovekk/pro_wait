@@ -1,6 +1,6 @@
 from django.contrib import admin
 from moment.models import Moment, Voice, Video, Image, Good, Comment, ReplyComment, Tag, Report, CommentGood
-from moment.models import CommentImage, CommentVoice, CommentVideo, Push
+from moment.models import CommentImage, CommentVoice, CommentVideo, Push, RefuseFind, RefuseUser
 
 # 发现
 @admin.register(Moment)
@@ -193,6 +193,32 @@ class PushAdmin(admin.ModelAdmin):
     # 显示的字段
     list_display = ['id', 'push_content', 'comment_date', 'comment_time', 'push_type',
                     'publish_id', 'publisher_id','commentator']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+
+# 屏蔽说说
+@admin.register(RefuseFind)
+class RefuseFindAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'moment', 'user', 'publish_datetime']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+
+# 屏蔽用户
+@admin.register(RefuseUser)
+class RefuseUserAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'his_id', 'my_id', 'publish_datetime']
 
     # 每页显示条数
     list_per_page = 50

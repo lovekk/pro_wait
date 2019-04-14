@@ -1,5 +1,5 @@
 from django.contrib import admin
-from lose.models import Lose, LoseImg, LoseComment, LoseReplyComment
+from lose.models import Lose, LoseImg, LoseComment, LoseReplyComment, RefuseLose, LoseReport
 
 
 # 失物招领admin
@@ -79,3 +79,31 @@ class LoseReplyCommentAdmin(admin.ModelAdmin):
     # 筛选器
     search_fields = ['content']  # 搜索字段 标题等文本字段用搜索框
     # date_hierarchy = 'publish_date'  # 详细时间分层筛选　日期时间用分层筛选
+
+
+
+# 失物招领 举报
+@admin.register(LoseReport)
+class LoseReportAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'lose', 'user', 'publish_datetime']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+
+
+# 失物招领 屏蔽
+@admin.register(RefuseLose)
+class RefuseLoseAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'lose', 'user', 'publish_datetime']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']

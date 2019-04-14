@@ -7,7 +7,7 @@ from django.db.models import Count, F
 from utils.qiniu_upload import qi_local_upload
 from pro_wait.settings import MEDIA_ROOT
 
-from second.models import Second, SecondImg, SecondComment, SecondReplyComment, SecondReport
+from second.models import Second, SecondImg, SecondComment, SecondReplyComment, SecondReport, RefuseSecond
 from user.models import User, School
 from moment.models import Push
 
@@ -34,6 +34,15 @@ class IndexView(View):
     def get(self, request):
         school_id = request.GET.get('school_id')
         skip = int(request.GET.get('skip'))
+
+        # 查看是否有屏蔽说说现象   # 区别安卓 安卓这两个没有参数user_id
+        refuse_two_id_list = []
+        if request.GET.get('user_id'):
+            user_id = request.GET.get('user_id')
+            refuse_two_id = list(RefuseSecond.objects.filter(user=user_id).values('second'))
+            for re in refuse_two_id:
+                refuse_two_id_list.append(re['second'])
+
         if school_id:
             # 一对多 反查外键
             # 先查询 所有id
@@ -48,21 +57,25 @@ class IndexView(View):
             for item in list(seconds_list):
                 # print(item.get('id'))  # {'id': 43}
                 item_id = item.get('id')
-                # 查发布内容
-                for_t = Second.objects.filter(id=item_id).values(
-                    'id', 'content', 'good_num', 'create_date','create_time','price','is_type', 'view_num',
-                    u_nick=F('creator__nick'),u_img=F('creator__head_qn_url'),u_id=F('creator__id'), u_token=F('creator__token')
-                ).order_by('-id')
+                if item_id in refuse_two_id_list:
+                    # 跳过此说说
+                    continue
+                else:
+                    # 查发布内容
+                    for_t = Second.objects.filter(id=item_id).values(
+                        'id', 'content', 'good_num', 'create_date','create_time','price','is_type', 'view_num',
+                        u_nick=F('creator__nick'),u_img=F('creator__head_qn_url'),u_id=F('creator__id'), u_token=F('creator__token')
+                    ).order_by('-id')
 
-                for_text = list(for_t)
-                # 查发布图片
-                for_img = list(SecondImg.objects.filter(second=item_id).values('id', 'qiniu_img', 'second'))
+                    for_text = list(for_t)
+                    # 查发布图片
+                    for_img = list(SecondImg.objects.filter(second=item_id).values('id', 'qiniu_img', 'second'))
 
-                for_all['id'] = item_id
-                for_all['for_text'] = for_text
-                for_all['for_img'] = for_img
+                    for_all['id'] = item_id
+                    for_all['for_text'] = for_text
+                    for_all['for_img'] = for_img
 
-                all_list.append(copy.deepcopy(for_all))
+                    all_list.append(copy.deepcopy(for_all))
 
             data['code'] = 200
             data['text_list'] = all_list
@@ -260,3 +273,20 @@ class SecondReportView(View):
             return JsonResponse({'code': 200})
         else:
             return JsonResponse({'msg': '已经举报过了'})
+
+
+# 屏蔽此条二手
+class RefuseSecondView(View):
+    def get(self, request):
+        second_id = request.GET.get('second_id')
+        u_id = request.GET.get('u_id')
+
+        if second_id and u_id:
+            # 屏蔽此条说说 入表
+            user_ins = User.objects.get(id=u_id)
+            second_ins = Second.objects.get(id=second_id)
+            RefuseSecond.objects.create(second=second_ins,user=user_ins)
+
+            return JsonResponse({'code': 200})
+        else:
+            return JsonResponse({'errmsg': '屏蔽失败'})

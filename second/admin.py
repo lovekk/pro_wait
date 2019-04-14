@@ -1,5 +1,5 @@
 from django.contrib import admin
-from second.models import Second,SecondImg,SecondComment,SecondReplyComment,SecondReport
+from second.models import Second,SecondImg,SecondComment,SecondReplyComment,SecondReport,RefuseSecond
 
 
 # 二手市场
@@ -81,6 +81,20 @@ class SecondReplyCommentAdmin(admin.ModelAdmin):
 # 二手市场 举报
 @admin.register(SecondReport)
 class SecondReportAdmin(admin.ModelAdmin):
+    # 显示的字段
+    list_display = ['id', 'second', 'user', 'publish_datetime']
+
+    # 每页显示条数
+    list_per_page = 50
+
+    # id 排序
+    ordering = ['-id']
+
+
+
+# 屏蔽 二手
+@admin.register(RefuseSecond)
+class RefuseSecondAdmin(admin.ModelAdmin):
     # 显示的字段
     list_display = ['id', 'second', 'user', 'publish_datetime']
 

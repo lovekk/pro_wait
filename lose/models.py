@@ -91,3 +91,27 @@ class LoseReplyComment(models.Model):
         verbose_name = "失物招领·回复评论"
         verbose_name_plural = verbose_name
 
+
+# 失物招领 举报表
+class LoseReport(models.Model):
+    publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
+    lose = models.ForeignKey('Lose',verbose_name='失物id',on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey('user.User', verbose_name='用户id', on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        db_table = 'dn_lose_report'
+        verbose_name = "失物招领·举报"
+        verbose_name_plural = verbose_name
+
+
+# 屏蔽失物招领表
+class RefuseLose(models.Model):
+    lose = models.ForeignKey('Lose',verbose_name='失物id',on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey('user.User', verbose_name='用户id', on_delete=models.CASCADE, null=True)
+    publish_datetime = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
+
+    class Meta:
+        db_table = 'dn_lose_refuse'
+        verbose_name = "失物招领·屏蔽"
+        verbose_name_plural = verbose_name
+
