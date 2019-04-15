@@ -30,31 +30,33 @@
   
 
 ### 三、后台（Django自带的admin管理后台）  
-(```)
-@admin.register(Moment)
-class MomentAdmin(admin.ModelAdmin):
-    # 显示的字段
+```
+@admin.register(Moment)  
+class MomentAdmin(admin.ModelAdmin):  
+    # 显示的字段  
     list_display = ['id', 'content', 'tag', 'user', 'school','is_show', 'good_num', 'comment_num', 'view_num', 'relay_num',
-                    'report_num', 'is_first', 'publish_date', 'publish_time']
-    # 每页显示条数
-    list_per_page = 50
-    # id 排序
-    ordering = ['-id']
-    # 设置哪些字段可以点击进入编辑界面
-    list_display_links = ['id', 'content']
-    # 筛选器
-    list_filter = ['school', 'tag', 'report_num', 'is_show'] # 过滤器  一般ManyToManyField多对多字段用过滤器
-    search_fields = ['content']  # 搜索字段 标题等文本字段用搜索框
-    date_hierarchy = 'publish_date'  # 详细时间分层筛选　日期时间用分层筛选
-(```)
+                    'report_num', 'is_first', 'publish_date', 'publish_time']  
+    # 每页显示条数  
+    list_per_page = 50  
+    # id 排序  
+    ordering = ['-id']  
+    # 设置哪些字段可以点击进入编辑界面  
+    list_display_links = ['id', 'content']  
+    # 筛选器  
+    list_filter = ['school', 'tag', 'report_num', 'is_show'] # 过滤器  一般ManyToManyField多对多字段用过滤器  
+    search_fields = ['content']  # 搜索字段 标题等文本字段用搜索框  
+    date_hierarchy = 'publish_date'  # 详细时间分层筛选　日期时间用分层筛选  
+```
    
   <img src="http://m.qpic.cn/psb?/V14QvJYi1Zp3gm/glEHsk2.2DIlo5cDlO.0ehdDrB5l7SmHJ46xMJLdiCU!/b/dL8AAAAAAAAA&bo=jgS9AwAAAAADBxY!&rf=viewer_4" width="800"/> 
   
   
     
 ### 四、其他  
-1.新增粉丝  
-2.评论留言查看  
-3.私信聊天，即时通讯列表  
+1.音视图，先保存到本地服务器，再上传到七牛云，手机APP端直接使用七牛存储地址  
+2.utils封装模块，七牛存储，课表成绩的爬取  
+
+~~~~~~未完待续，有时间再详细补充~~~~~~
+
   
  
