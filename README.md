@@ -11,7 +11,7 @@
 ## ---简单总结---
 ### 一、数据表
 共72张数据表，10张Django自带，62张自建表  
-  <img src="http://m.qpic.cn/psb?/V14QvJYi1Zp3gm/DYkauBs8CIh2hHS7PWGuuxP8RrMgC985oWIQwSf53L4!/b/dDYBAAAAAAAA&bo=CwSBAgAAAAADB64!&rf=viewer_4" width="800"/> 
+
   
 ### 二、django应用app
 共10个django应用app   
@@ -25,8 +25,7 @@
 8.recovery 垃圾分类回收  
 9.second 校园二手  
 10.user 用户  
-
-  <img src="http://m.qpic.cn/psb?/V14QvJYi1Zp3gm/GdVQcdu8zqua2cOD5Y5d9LiiuoRNwyCoH7ZOMgrUURI!/b/dLYAAAAAAAAA&bo=AgYYAwAAAAADJx0!&rf=viewer_4" width="800"/>   
+ 
   
 
 ### 三、后台（Django自带的admin管理后台）  
@@ -48,7 +47,6 @@ class MomentAdmin(admin.ModelAdmin):
     date_hierarchy = 'publish_date'  # 详细时间分层筛选　日期时间用分层筛选  
 ```
    
-  <img src="http://m.qpic.cn/psb?/V14QvJYi1Zp3gm/glEHsk2.2DIlo5cDlO.0ehdDrB5l7SmHJ46xMJLdiCU!/b/dL8AAAAAAAAA&bo=jgS9AwAAAAADBxY!&rf=viewer_4" width="800"/> 
   
   
     
